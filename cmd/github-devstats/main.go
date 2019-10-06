@@ -13,5 +13,7 @@ func main() {
 		panic("supply github organization and access token as command parameters")
 	}
 	c := client.NewClient(org, accessToken)
-	fmt.Println(c)
+
+	teamsByUser := c.GetTeamsByUser()
+	fmt.Println(teamsByUser)
 }

@@ -12,6 +12,7 @@ type GH struct {
 	client *github.Client
 	ctx    context.Context
 	org    string
+	users  map[string]string
 }
 
 func NewClient(org, accessToken string) *GH {
@@ -23,6 +24,7 @@ func NewClient(org, accessToken string) *GH {
 		client: github.NewClient(httpClient),
 		ctx:    ctx,
 		org:    org,
+		users:  map[string]string{},
 	}
 	return client
 }
@@ -164,6 +166,18 @@ func getReviews(c *GH, prNumber int, repo string, page int) (review []*github.Pu
 		return nil, 0, err
 	}
 	return reviews, rsp.NextPage, nil
+}
+
+func (c *GH) GetUserName(user string) string {
+	if len(c.users[user]) > 0 {
+		return c.users[user]
+	}
+	u, _, err := c.client.Users.Get(c.ctx, user)
+	if err != nil {
+		return ""
+	}
+	c.users[user] = u.GetName()
+	return u.GetName()
 }
 
 func (c *GH) GetPR(prNumber int, repo string) (*github.PullRequest, error) {

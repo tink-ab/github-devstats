@@ -56,6 +56,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 		CommitsCount:             p.GetCommits(),
 		CommentsCount:            p.GetComments(),
 		AuthorId:                 p.GetUser().GetLogin(),
+		AuthorName:               c.GetUserName(p.GetUser().GetLogin()),
 		CommitsByType:            map[string]int{},
 		FilesAddedByExtension:    map[string]int{},
 		FilesModifiedByExtension: map[string]int{},
@@ -93,6 +94,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 			if r.GetState() == "APPROVED" {
 				e.TimeToApprove = r.GetSubmittedAt().Sub(p.GetCreatedAt())
 				e.ApproverId = r.GetUser().GetLogin()
+				e.ApproverName = c.GetUserName(r.GetUser().GetLogin())
 			}
 			if r.GetState() == "DISMISSED" {
 				e.DismissReviewCount++

@@ -5,7 +5,10 @@ go_library(
     srcs = ["main.go"],
     importpath = "github.com/krlvi/github-devstats/cmd/github-devstats",
     visibility = ["//visibility:private"],
-    deps = ["//client:go_default_library"],
+    deps = [
+        "//client:go_default_library",
+        "//event:go_default_library",
+    ],
 )
 
 go_binary(

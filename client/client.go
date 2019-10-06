@@ -100,6 +100,72 @@ func getMembers(c *GH, teamId int64, page int) (members []*github.User, nextPage
 	return members, rsp.NextPage, nil
 }
 
+func (c *GH) GetPRCommits(prNumber int, repo string) ([]*github.RepositoryCommit, error) {
+	var commits []*github.RepositoryCommit
+	page := 1
+	for page != 0 {
+		newCommits, nextPage, err := getCommits(c, prNumber, repo, page)
+		if err != nil {
+			return nil, err
+		}
+		page = nextPage
+		commits = append(commits, newCommits...)
+	}
+	return commits, nil
+}
+
+func getCommits(c *GH, prNumber int, repo string, page int) (commits []*github.RepositoryCommit, nextPage int, err error) {
+	commits, rsp, err := c.client.PullRequests.ListCommits(c.ctx, c.org, repo, prNumber, &github.ListOptions{Page: page})
+	if err != nil {
+		return nil, 0, err
+	}
+	return commits, rsp.NextPage, nil
+}
+
+func (c *GH) GetPRFiles(prNumber int, repo string) ([]*github.CommitFile, error) {
+	var files []*github.CommitFile
+	page := 1
+	for page != 0 {
+		newFiles, nextPage, err := getFiles(c, prNumber, repo, page)
+		if err != nil {
+			return nil, err
+		}
+		page = nextPage
+		files = append(files, newFiles...)
+	}
+	return files, nil
+}
+
+func getFiles(c *GH, prNumber int, repo string, page int) (files []*github.CommitFile, nextPage int, err error) {
+	files, rsp, err := c.client.PullRequests.ListFiles(c.ctx, c.org, repo, prNumber, &github.ListOptions{Page: page})
+	if err != nil {
+		return nil, 0, err
+	}
+	return files, rsp.NextPage, nil
+}
+
+func (c *GH) GetReviews(prNumber int, repo string) ([]*github.PullRequestReview, error) {
+	var reviews []*github.PullRequestReview
+	page := 1
+	for page != 0 {
+		newReviews, nextPage, err := getReviews(c, prNumber, repo, page)
+		if err != nil {
+			return nil, err
+		}
+		page = nextPage
+		reviews = append(reviews, newReviews...)
+	}
+	return reviews, nil
+}
+
+func getReviews(c *GH, prNumber int, repo string, page int) (review []*github.PullRequestReview, nextPage int, err error) {
+	reviews, rsp, err := c.client.PullRequests.ListReviews(c.ctx, c.org, repo, prNumber, &github.ListOptions{Page: page})
+	if err != nil {
+		return nil, 0, err
+	}
+	return reviews, rsp.NextPage, nil
+}
+
 func (c *GH) GetPR(prNumber int, repo string) (*github.PullRequest, error) {
 	pr, _, err := c.client.PullRequests.Get(c.ctx, c.org, repo, prNumber)
 	if err != nil {

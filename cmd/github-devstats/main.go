@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/krlvi/github-devstats/client"
+	"github.com/krlvi/github-devstats/event"
 	"os"
 	"time"
 )
@@ -22,6 +23,5 @@ func main() {
 	if err != nil {
 		panic("could not fetch pull requests")
 	}
-	fmt.Println(prs)
-	fmt.Println(reposByPR)
+	event.ProcessPRs(c, prs, reposByPR)
 }

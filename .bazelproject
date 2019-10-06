@@ -1,0 +1,7 @@
+directories:
+  .
+
+targets:
+  //...
+
+workspace_type: go

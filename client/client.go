@@ -13,6 +13,7 @@ type GH struct {
 	ctx    context.Context
 	org    string
 	users  map[string]string
+	teams  map[string][]string
 }
 
 func NewClient(org, accessToken string) *GH {
@@ -26,7 +27,12 @@ func NewClient(org, accessToken string) *GH {
 		org:    org,
 		users:  map[string]string{},
 	}
+	client.teams = client.GetTeamsByUser()
 	return client
+}
+
+func (c *GH) GetUserTeams(login string) []string {
+	return c.teams[login]
 }
 
 func (c *GH) GetTeamsByUser() map[string][]string {

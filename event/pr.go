@@ -57,6 +57,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 		CommentsCount:            p.GetComments(),
 		AuthorId:                 p.GetUser().GetLogin(),
 		AuthorName:               c.GetUserName(p.GetUser().GetLogin()),
+		AuthorTeams:              c.GetUserTeams(p.GetUser().GetLogin()),
 		CommitsByType:            map[string]int{},
 		FilesAddedByExtension:    map[string]int{},
 		FilesModifiedByExtension: map[string]int{},
@@ -95,6 +96,8 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 				e.TimeToApprove = r.GetSubmittedAt().Sub(p.GetCreatedAt())
 				e.ApproverId = r.GetUser().GetLogin()
 				e.ApproverName = c.GetUserName(r.GetUser().GetLogin())
+				e.ApproverTeams = c.GetUserTeams(r.GetUser().GetLogin())
+				e.CrossTeam = crossTeam(c.GetUserTeams(p.GetUser().GetLogin()), c.GetUserTeams(r.GetUser().GetLogin()))
 			}
 			if r.GetState() == "DISMISSED" {
 				e.DismissReviewCount++
@@ -105,6 +108,19 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 		}
 	}
 	return e
+}
+
+func crossTeam(from, to []string) bool {
+	fromSet := map[string]bool{}
+	for _, f := range from {
+		fromSet[f] = true
+	}
+	for _, t := range to {
+		if fromSet[t] {
+			return false
+		}
+	}
+	return true
 }
 
 func fileExtension(filename string) string {

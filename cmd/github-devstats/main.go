@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/krlvi/github-devstats/client"
 	"github.com/krlvi/github-devstats/event"
 	"os"
@@ -16,8 +15,6 @@ func main() {
 	}
 	c := client.NewClient(org, accessToken)
 
-	teamsByUser := c.GetTeamsByUser()
-	fmt.Println(teamsByUser)
 	yesterday := time.Now().AddDate(0, 0, -1)
 	prs, reposByPR, err := c.GetMergedPRs(yesterday)
 	if err != nil {

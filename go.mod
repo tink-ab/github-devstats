@@ -1,4 +1,4 @@
-module github-devstats
+module github.com/krlvi/github-devstats
 
 go 1.12
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/krlvi/github-devstats/client"
 	"os"
+	"time"
 )
 
 func main() {
@@ -16,4 +17,11 @@ func main() {
 
 	teamsByUser := c.GetTeamsByUser()
 	fmt.Println(teamsByUser)
+	yesterday := time.Now().AddDate(0, 0, -1)
+	prs, reposByPR, err := c.GetMergedPRs(yesterday)
+	if err != nil {
+		panic("could not fetch pull requests")
+	}
+	fmt.Println(prs)
+	fmt.Println(reposByPR)
 }

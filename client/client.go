@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
+	"strings"
+	"time"
 )
 
 type GH struct {
@@ -96,4 +98,59 @@ func getMembers(c *GH, teamId int64, page int) (members []*github.User, nextPage
 		return nil, 0, err
 	}
 	return members, rsp.NextPage, nil
+}
+
+func (c *GH) GetPR(prNumber int, repo string) (*github.PullRequest, error) {
+	pr, _, err := c.client.PullRequests.Get(c.ctx, c.org, repo, prNumber)
+	if err != nil {
+		return nil, err
+	}
+	return pr, nil
+}
+
+func (c *GH) GetMergedPRs(date time.Time) (prs []*github.PullRequest, reposByPR map[int]string, err error) {
+	issues, err := getAllMergedPRIssues(c, date)
+	if err != nil {
+		return nil, nil, err
+	}
+	reposByPR = map[int]string{}
+	for _, i := range issues {
+		repo := repoUrlToName(i.GetRepositoryURL())
+		reposByPR[i.GetNumber()] = repo
+		pr, err := c.GetPR(i.GetNumber(), repo)
+		if err != nil {
+			continue
+		}
+		prs = append(prs, pr)
+	}
+	return prs, reposByPR, nil
+}
+
+func getAllMergedPRIssues(c *GH, date time.Time) ([]github.Issue, error) {
+	var prs []github.Issue
+	page := 1
+	for page != 0 {
+		newPrs, nextPage, err := getMergedPRIssues(c, date, page)
+		if err != nil {
+			return nil, err
+		}
+		page = nextPage
+		prs = append(prs, newPrs...)
+	}
+	return prs, nil
+}
+
+func getMergedPRIssues(c *GH, date time.Time, page int) (prs []github.Issue, nextPage int, err error) {
+	d := date.Format("2006-01-02")
+	query := "org:" + c.org + " is:pr is:closed merged:" + d + ".." + d
+	issues, rsp, err := c.client.Search.Issues(c.ctx, query, &github.SearchOptions{ListOptions: github.ListOptions{Page: page}})
+	if err != nil {
+		return nil, 0, err
+	}
+	return issues.Issues, rsp.NextPage, nil
+}
+
+func repoUrlToName(url string) string {
+	tokens := strings.Split(url, "/")
+	return tokens[len(tokens)-1]
 }

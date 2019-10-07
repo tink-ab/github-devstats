@@ -2,6 +2,7 @@ package event
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/google/go-github/github"
 	"github.com/krlvi/github-devstats/client"
@@ -13,7 +14,7 @@ type Event struct {
 	PrNumber                 int            `json:"pr_number"`
 	Repository               string         `json:"repository"`
 	MergedAt                 time.Time      `json:"merged_at"`
-	TimeToMerge              time.Duration  `json:"time_to_merge"`
+	TimeToMerge              Duration       `json:"time_to_merge"`
 	LinesAdded               int            `json:"lines_added"`
 	LinesRemoved             int            `json:"lines_removed"`
 	FilesChanged             int            `json:"files_changed"`
@@ -25,7 +26,7 @@ type Event struct {
 	CommitsByType            map[string]int `json:"commits_by_type"`
 	FilesAddedByExtension    map[string]int `json:"files_added_by_extension"`
 	FilesModifiedByExtension map[string]int `json:"files_modified_by_extension"`
-	TimeToApprove            time.Duration  `json:"time_to_approve"`
+	TimeToApprove            Duration       `json:"time_to_approve"`
 	ApproverId               string         `json:"approver_id"`
 	ApproverName             string         `json:"approver_name"`
 	ApproverTeams            []string       `json:"approver_teams"`
@@ -49,7 +50,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 		PrNumber:                 p.GetNumber(),
 		Repository:               prRepos[p.GetNumber()],
 		MergedAt:                 p.GetMergedAt(),
-		TimeToMerge:              p.GetMergedAt().Sub(p.GetCreatedAt()),
+		TimeToMerge:              Duration{p.GetMergedAt().Sub(p.GetCreatedAt())},
 		LinesAdded:               p.GetAdditions(),
 		LinesRemoved:             p.GetDeletions(),
 		FilesChanged:             p.GetChangedFiles(),
@@ -61,7 +62,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 		CommitsByType:            map[string]int{},
 		FilesAddedByExtension:    map[string]int{},
 		FilesModifiedByExtension: map[string]int{},
-		TimeToApprove:            0,
+		TimeToApprove:            Duration{},
 		ApproverId:               "",
 		ApproverName:             "",
 		ApproverTeams:            nil,
@@ -93,7 +94,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 	if err == nil {
 		for _, r := range reviews {
 			if r.GetState() == "APPROVED" {
-				e.TimeToApprove = r.GetSubmittedAt().Sub(p.GetCreatedAt())
+				e.TimeToApprove = Duration{r.GetSubmittedAt().Sub(p.GetCreatedAt())}
 				e.ApproverId = r.GetUser().GetLogin()
 				e.ApproverName = c.GetUserName(r.GetUser().GetLogin())
 				e.ApproverTeams = c.GetUserTeams(r.GetUser().GetLogin())
@@ -173,4 +174,33 @@ func commitType(msg string) string {
 		return "test"
 	}
 	return "uncategorized"
+}
+
+type Duration struct {
+	time.Duration
+}
+
+func (d Duration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(d.String())
+}
+
+func (d *Duration) UnmarshalJSON(b []byte) error {
+	var v interface{}
+	if err := json.Unmarshal(b, &v); err != nil {
+		return err
+	}
+	switch value := v.(type) {
+	case float64:
+		d.Duration = time.Duration(value)
+		return nil
+	case string:
+		var err error
+		d.Duration, err = time.ParseDuration(value)
+		if err != nil {
+			return err
+		}
+		return nil
+	default:
+		return errors.New("invalid duration")
+	}
 }

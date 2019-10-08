@@ -27,6 +27,7 @@ type Event struct {
 	CommitsByType            map[string]int `json:"commits_by_type"`
 	FilesAddedByExtension    map[string]int `json:"files_added_by_extension"`
 	FilesModifiedByExtension map[string]int `json:"files_modified_by_extension"`
+	FilesModifiedByName      map[string]int `json:"files_modified_by_name"`
 	TimeToApproveSeconds     float64        `json:"time_to_approve_seconds"`
 	ApproverId               string         `json:"approver_id"`
 	ApproverName             string         `json:"approver_name"`
@@ -74,6 +75,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string) Event {
 		CommitsByType:            map[string]int{},
 		FilesAddedByExtension:    map[string]int{},
 		FilesModifiedByExtension: map[string]int{},
+		FilesModifiedByName:      map[string]int{},
 		TimeToApproveSeconds:     0,
 		ApproverId:               "",
 		ApproverName:             "",
@@ -95,6 +97,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string) Event {
 		for _, f := range files {
 			if f.GetStatus() == "modified" {
 				e.FilesModifiedByExtension[fileExtension(f.GetFilename())]++
+				e.FilesModifiedByName[f.GetFilename()]++
 			}
 			if f.GetStatus() == "added" {
 				e.FilesAddedByExtension[fileExtension(f.GetFilename())]++

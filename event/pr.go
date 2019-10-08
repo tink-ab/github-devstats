@@ -16,6 +16,7 @@ type Event struct {
 	Repository               string         `json:"repository"`
 	MergedAt                 time.Time      `json:"merged_at"`
 	TimeToMergeSeconds       float64        `json:"time_to_merge_seconds"`
+	BranchAgeSeconds         float64        `json:"branch_age_seconds"`
 	LinesAdded               int            `json:"lines_added"`
 	LinesRemoved             int            `json:"lines_removed"`
 	FilesChanged             int            `json:"files_changed"`
@@ -52,6 +53,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 		Repository:               prRepos[p.GetNumber()],
 		MergedAt:                 p.GetMergedAt(),
 		TimeToMergeSeconds:       Duration{p.GetMergedAt().Sub(p.GetCreatedAt())}.Seconds(),
+		BranchAgeSeconds:         branchAge(c, prRepos[p.GetNumber()], p.GetBase().GetSHA(), p.GetMergeCommitSHA()),
 		LinesAdded:               p.GetAdditions(),
 		LinesRemoved:             p.GetDeletions(),
 		FilesChanged:             p.GetChangedFiles(),
@@ -204,4 +206,16 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 	default:
 		return errors.New("invalid duration")
 	}
+}
+
+func branchAge(c *client.GH, repo, base, merge string) float64 {
+	baseCommit, err := c.GetCommit(repo, base)
+	if err != nil {
+		return -1
+	}
+	mergeCommit, err := c.GetCommit(repo, merge)
+	if err != nil {
+		return -1
+	}
+	return mergeCommit.GetAuthor().GetDate().Sub(baseCommit.GetAuthor().GetDate()).Seconds()
 }

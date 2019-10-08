@@ -177,6 +177,14 @@ func getMembers(c *GH, teamId int64, page int) (members []*github.User, nextPage
 	return members, rsp.NextPage, nil
 }
 
+func (c *GH) GetCommit(repo, hash string) (*github.Commit, error) {
+	commit, _, err := c.client.Git.GetCommit(c.ctx, c.org, repo, hash)
+	if err != nil {
+		return nil, err
+	}
+	return commit, nil
+}
+
 func (c *GH) GetPRCommits(prNumber int, repo string) ([]*github.RepositoryCommit, error) {
 	var commits []*github.RepositoryCommit
 	page := 1

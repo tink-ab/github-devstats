@@ -11,10 +11,13 @@ import (
 )
 
 func main() {
+	if len(os.Args) < 3 {
+		printUsageAndExit()
+	}
 	org := os.Args[1]
 	accessToken := os.Args[2]
 	if len(org) <= 0 || len(accessToken) <= 0 {
-		panic("supply github organization and access token as command parameters")
+		printUsageAndExit()
 	}
 	daysAgo := 0
 	if len(os.Args) > 3 {
@@ -31,4 +34,9 @@ func main() {
 		log.Panicln("could not fetch pull requests:", err)
 	}
 	event.ProcessPRIssues(c, prIssues)
+}
+
+func printUsageAndExit() {
+	log.Println("supply github organization and access token as command parameters")
+	os.Exit(1)
 }

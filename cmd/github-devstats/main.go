@@ -26,9 +26,9 @@ func main() {
 
 	date := time.Now().AddDate(0, 0, daysAgo*-1)
 	log.Println("fetching merged pull requests for", org, "on date", date.Format("2006-01-02"))
-	prs, reposByPR, err := c.GetMergedPRs(date)
+	prIssues, err := c.GetAllMergedPRIssues(date)
 	if err != nil {
 		log.Panicln("could not fetch pull requests:", err)
 	}
-	event.ProcessPRs(c, prs, reposByPR)
+	event.ProcessPRIssues(c, prIssues)
 }

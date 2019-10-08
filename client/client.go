@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/google/go-github/github"
@@ -271,25 +270,7 @@ func (c *GH) GetPR(prNumber int, repo string) (*github.PullRequest, error) {
 	return pr, nil
 }
 
-func (c *GH) GetMergedPRs(date time.Time) (prs []*github.PullRequest, reposByPR map[int]string, err error) {
-	issues, err := getAllMergedPRIssues(c, date)
-	if err != nil {
-		return nil, nil, err
-	}
-	reposByPR = map[int]string{}
-	for _, i := range issues {
-		repo := repoUrlToName(i.GetRepositoryURL())
-		reposByPR[i.GetNumber()] = repo
-		pr, err := c.GetPR(i.GetNumber(), repo)
-		if err != nil {
-			continue
-		}
-		prs = append(prs, pr)
-	}
-	return prs, reposByPR, nil
-}
-
-func getAllMergedPRIssues(c *GH, date time.Time) ([]github.Issue, error) {
+func (c *GH) GetAllMergedPRIssues(date time.Time) ([]github.Issue, error) {
 	var prs []github.Issue
 	page := 1
 	for page != 0 {
@@ -311,9 +292,4 @@ func getMergedPRIssues(c *GH, date time.Time, page int) (prs []github.Issue, nex
 		return nil, 0, err
 	}
 	return issues.Issues, rsp.NextPage, nil
-}
-
-func repoUrlToName(url string) string {
-	tokens := strings.Split(url, "/")
-	return tokens[len(tokens)-1]
 }

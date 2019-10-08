@@ -36,9 +36,14 @@ type Event struct {
 	ChangesRequestedCount    int            `json:"changes_requested_count"`
 }
 
-func ProcessPRs(c *client.GH, prs []*github.PullRequest, prRepos map[int]string) {
-	for _, p := range prs {
-		j, err := json.MarshalIndent(prToEvent(c, p, prRepos), "", "  ")
+func ProcessPRIssues(c *client.GH, issues []github.Issue) {
+	for _, i := range issues {
+		repo := repoUrlToName(i.GetRepositoryURL())
+		pr, err := c.GetPR(i.GetNumber(), repo)
+		if err != nil {
+			continue
+		}
+		j, err := json.MarshalIndent(prToEvent(c, pr, repo), "", "  ")
 		if err != nil {
 			continue
 		}
@@ -46,13 +51,18 @@ func ProcessPRs(c *client.GH, prs []*github.PullRequest, prRepos map[int]string)
 	}
 }
 
-func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Event {
+func repoUrlToName(url string) string {
+	tokens := strings.Split(url, "/")
+	return tokens[len(tokens)-1]
+}
+
+func prToEvent(c *client.GH, p *github.PullRequest, repo string) Event {
 	e := Event{
 		PrNumber:                 p.GetNumber(),
-		Repository:               prRepos[p.GetNumber()],
+		Repository:               repo,
 		MergedAt:                 p.GetMergedAt(),
 		TimeToMergeSeconds:       p.GetMergedAt().Sub(p.GetCreatedAt()).Seconds(),
-		BranchAgeSeconds:         branchAge(c, prRepos[p.GetNumber()], p.GetBase().GetSHA(), p.GetMergeCommitSHA()),
+		BranchAgeSeconds:         branchAge(c, repo, p.GetBase().GetSHA(), p.GetMergeCommitSHA()),
 		LinesAdded:               p.GetAdditions(),
 		LinesRemoved:             p.GetDeletions(),
 		FilesChanged:             p.GetChangedFiles(),
@@ -73,14 +83,14 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 		ChangesRequestedCount:    0,
 	}
 
-	commits, err := c.GetPRCommits(p.GetNumber(), prRepos[p.GetNumber()])
+	commits, err := c.GetPRCommits(p.GetNumber(), repo)
 	if err == nil {
 		for _, com := range commits {
 			e.CommitsByType[commitType(com.GetCommit().GetMessage())]++
 		}
 	}
 
-	files, err := c.GetPRFiles(p.GetNumber(), prRepos[p.GetNumber()])
+	files, err := c.GetPRFiles(p.GetNumber(), repo)
 	if err == nil {
 		for _, f := range files {
 			if f.GetStatus() == "modified" {
@@ -92,7 +102,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 		}
 	}
 
-	reviews, err := c.GetReviews(p.GetNumber(), prRepos[p.GetNumber()])
+	reviews, err := c.GetReviews(p.GetNumber(), repo)
 	if err == nil {
 		for _, r := range reviews {
 			if r.GetState() == "APPROVED" {

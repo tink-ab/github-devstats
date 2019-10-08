@@ -32,3 +32,13 @@ type Event struct {
 }
 ```
 which in turn can be forwarded to other time series systems such as Prometheus for further processing.
+
+## Prerequisites
+Have [Bazel](https://bazel.build/) installed, ideally with [Bazelisk](https://github.com/bazelbuild/bazelisk) so that it picks up the version from the [.bazelversion](.bazelversion) file automatically.
+
+## Usage
+Run:
+
+`$ bazel run //cmd/github-devstats your-gh-org $GH_TOKEN`
+
+Where `your-gh-org` is the name of your GitHub org and `$GH_TOKEN` evaluates to your secret token (you probably dont want to put this in your shell history).

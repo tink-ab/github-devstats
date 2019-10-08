@@ -28,7 +28,7 @@ func main() {
 	log.Println("fetching merged pull requests for", org, "on date", date.Format("2006-01-02"))
 	prs, reposByPR, err := c.GetMergedPRs(date)
 	if err != nil {
-		panic("could not fetch pull requests")
+		log.Panicln("could not fetch pull requests:", err)
 	}
 	event.ProcessPRs(c, prs, reposByPR)
 }

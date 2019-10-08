@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/google/go-github/github"
-	"github.com/krlvi/github-devstats/client"
 	"strings"
 	"time"
+
+	"github.com/google/go-github/github"
+	"github.com/krlvi/github-devstats/client"
 )
 
 type Event struct {

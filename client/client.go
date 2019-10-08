@@ -2,7 +2,10 @@ package client
 
 import (
 	"context"
+	"errors"
+	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,14 +21,72 @@ type GH struct {
 	teams  map[string][]string
 }
 
+type rateLimitRetryer struct {
+	Delegate http.RoundTripper
+}
+
+const MaxRetries = 10
+
+func (r rateLimitRetryer) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	retries := 0
+	for {
+		if retries > MaxRetries {
+			return nil, errors.New("too many retries")
+		}
+
+		resp, err = r.Delegate.RoundTrip(req)
+		if err != nil {
+			return
+		}
+		if resp.StatusCode != 403 {
+			return
+		}
+		if resp.Header.Get("X-RateLimit-Remaining") != "0" {
+			// some other error, let's not back-off in that case.
+			return
+		}
+
+		err = resp.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+
+		// From Github: Mon, 01 Jul 2013 17:27:06 GMT
+		// From Golang: Mon Jan 2 15:04:05 -0700 MST 2006
+		now, parseErr := time.Parse("Mon, 02 Jan 2006 15:04:05 MST", resp.Header.Get("Date"))
+		if parseErr != nil {
+			return nil, parseErr
+		}
+
+		resetTime, resetTimeErr := strconv.Atoi(resp.Header.Get("X-RateLimit-Reset"))
+		if resetTimeErr != nil {
+			return nil, resetTimeErr
+		}
+		reset := time.Unix(int64(resetTime), 0)
+
+		timeToSleep := reset.Sub(now)
+		if timeToSleep < 0 {
+			// Not sure why this would happen but better safe than sorry.
+			timeToSleep = 0
+		}
+		timeToSleep += time.Second
+		log.Println("Sleeping due to rate-limitting:", timeToSleep)
+		time.Sleep(timeToSleep)
+
+		retries++
+	}
+}
+
 func NewClient(org, accessToken string) *GH {
 	ctx := context.Background()
 	httpClient := &http.Client{
-		Transport: &oauth2.Transport{
-			Base: http.DefaultTransport,
-			Source: oauth2.ReuseTokenSource(nil, oauth2.StaticTokenSource(
-				&oauth2.Token{AccessToken: accessToken},
-			)),
+		Transport: rateLimitRetryer{
+			&oauth2.Transport{
+				Base: http.DefaultTransport,
+				Source: oauth2.ReuseTokenSource(nil, oauth2.StaticTokenSource(
+					&oauth2.Token{AccessToken: accessToken},
+				)),
+			},
 		},
 	}
 

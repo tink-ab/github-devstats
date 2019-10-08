@@ -2,7 +2,6 @@ package event
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -52,7 +51,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 		PrNumber:                 p.GetNumber(),
 		Repository:               prRepos[p.GetNumber()],
 		MergedAt:                 p.GetMergedAt(),
-		TimeToMergeSeconds:       Duration{p.GetMergedAt().Sub(p.GetCreatedAt())}.Seconds(),
+		TimeToMergeSeconds:       p.GetMergedAt().Sub(p.GetCreatedAt()).Seconds(),
 		BranchAgeSeconds:         branchAge(c, prRepos[p.GetNumber()], p.GetBase().GetSHA(), p.GetMergeCommitSHA()),
 		LinesAdded:               p.GetAdditions(),
 		LinesRemoved:             p.GetDeletions(),
@@ -97,7 +96,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 	if err == nil {
 		for _, r := range reviews {
 			if r.GetState() == "APPROVED" {
-				e.TimeToApproveSeconds = Duration{r.GetSubmittedAt().Sub(p.GetCreatedAt())}.Seconds()
+				e.TimeToApproveSeconds = r.GetSubmittedAt().Sub(p.GetCreatedAt()).Seconds()
 				e.ApproverId = r.GetUser().GetLogin()
 				e.ApproverName = c.GetUserName(r.GetUser().GetLogin())
 				e.ApproverTeams = c.GetUserTeams(r.GetUser().GetLogin())
@@ -177,35 +176,6 @@ func commitType(msg string) string {
 		return "test"
 	}
 	return "uncategorized"
-}
-
-type Duration struct {
-	time.Duration
-}
-
-func (d Duration) MarshalJSON() ([]byte, error) {
-	return json.Marshal(d.String())
-}
-
-func (d *Duration) UnmarshalJSON(b []byte) error {
-	var v interface{}
-	if err := json.Unmarshal(b, &v); err != nil {
-		return err
-	}
-	switch value := v.(type) {
-	case float64:
-		d.Duration = time.Duration(value)
-		return nil
-	case string:
-		var err error
-		d.Duration, err = time.ParseDuration(value)
-		if err != nil {
-			return err
-		}
-		return nil
-	default:
-		return errors.New("invalid duration")
-	}
 }
 
 func branchAge(c *client.GH, repo, base, merge string) float64 {

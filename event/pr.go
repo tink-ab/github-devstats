@@ -42,7 +42,7 @@ func ProcessPRs(c *client.GH, prs []*github.PullRequest, prRepos map[int]string)
 		if err != nil {
 			continue
 		}
-		fmt.Printf("%s,\n", string(j))
+		fmt.Printf("%s\n", string(j))
 	}
 }
 

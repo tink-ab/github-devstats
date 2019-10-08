@@ -7,7 +7,7 @@ type Event struct {
 	PrNumber                 int            `json:"pr_number"`
 	Repository               string         `json:"repository"`
 	MergedAt                 time.Time      `json:"merged_at"`
-	TimeToMerge              time.Duration  `json:"time_to_merge"`
+	TimeToMergeSeconds       float64        `json:"time_to_merge_seconds"`
 	LinesAdded               int            `json:"lines_added"`
 	LinesRemoved             int            `json:"lines_removed"`
 	FilesChanged             int            `json:"files_changed"`
@@ -19,7 +19,7 @@ type Event struct {
 	CommitsByType            map[string]int `json:"commits_by_type"`
 	FilesAddedByExtension    map[string]int `json:"files_added_by_extension"`
 	FilesModifiedByExtension map[string]int `json:"files_modified_by_extension"`
-	TimeToApprove            time.Duration  `json:"time_to_approve"`
+	TimeToApproveSeconds     float64        `json:"time_to_approve_seconds"`
 	ApproverId               string         `json:"approver_id"`
 	ApproverName             string         `json:"approver_name"`
 	ApproverTeams            []string       `json:"approver_teams"`

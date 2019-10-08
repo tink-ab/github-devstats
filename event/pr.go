@@ -15,7 +15,7 @@ type Event struct {
 	PrNumber                 int            `json:"pr_number"`
 	Repository               string         `json:"repository"`
 	MergedAt                 time.Time      `json:"merged_at"`
-	TimeToMerge              Duration       `json:"time_to_merge"`
+	TimeToMergeSeconds       float64        `json:"time_to_merge_seconds"`
 	LinesAdded               int            `json:"lines_added"`
 	LinesRemoved             int            `json:"lines_removed"`
 	FilesChanged             int            `json:"files_changed"`
@@ -27,7 +27,7 @@ type Event struct {
 	CommitsByType            map[string]int `json:"commits_by_type"`
 	FilesAddedByExtension    map[string]int `json:"files_added_by_extension"`
 	FilesModifiedByExtension map[string]int `json:"files_modified_by_extension"`
-	TimeToApprove            Duration       `json:"time_to_approve"`
+	TimeToApproveSeconds     float64        `json:"time_to_approve_seconds"`
 	ApproverId               string         `json:"approver_id"`
 	ApproverName             string         `json:"approver_name"`
 	ApproverTeams            []string       `json:"approver_teams"`
@@ -51,7 +51,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 		PrNumber:                 p.GetNumber(),
 		Repository:               prRepos[p.GetNumber()],
 		MergedAt:                 p.GetMergedAt(),
-		TimeToMerge:              Duration{p.GetMergedAt().Sub(p.GetCreatedAt())},
+		TimeToMergeSeconds:       Duration{p.GetMergedAt().Sub(p.GetCreatedAt())}.Seconds(),
 		LinesAdded:               p.GetAdditions(),
 		LinesRemoved:             p.GetDeletions(),
 		FilesChanged:             p.GetChangedFiles(),
@@ -63,7 +63,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 		CommitsByType:            map[string]int{},
 		FilesAddedByExtension:    map[string]int{},
 		FilesModifiedByExtension: map[string]int{},
-		TimeToApprove:            Duration{},
+		TimeToApproveSeconds:     0,
 		ApproverId:               "",
 		ApproverName:             "",
 		ApproverTeams:            nil,
@@ -95,7 +95,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, prRepos map[int]string) Even
 	if err == nil {
 		for _, r := range reviews {
 			if r.GetState() == "APPROVED" {
-				e.TimeToApprove = Duration{r.GetSubmittedAt().Sub(p.GetCreatedAt())}
+				e.TimeToApproveSeconds = Duration{r.GetSubmittedAt().Sub(p.GetCreatedAt())}.Seconds()
 				e.ApproverId = r.GetUser().GetLogin()
 				e.ApproverName = c.GetUserName(r.GetUser().GetLogin())
 				e.ApproverTeams = c.GetUserTeams(r.GetUser().GetLogin())

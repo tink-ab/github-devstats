@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/krlvi/github-devstats/client"
-	"github.com/krlvi/github-devstats/event"
 	"log"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/krlvi/github-devstats/client"
+	"github.com/krlvi/github-devstats/event"
 )
 
 func main() {

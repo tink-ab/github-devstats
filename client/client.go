@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"net/http"
 	"strings"
 	"time"
 
@@ -19,9 +20,15 @@ type GH struct {
 
 func NewClient(org, accessToken string) *GH {
 	ctx := context.Background()
-	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: accessToken},
-	))
+	httpClient := &http.Client{
+		Transport: &oauth2.Transport{
+			Base: http.DefaultTransport,
+			Source: oauth2.ReuseTokenSource(nil, oauth2.StaticTokenSource(
+				&oauth2.Token{AccessToken: accessToken},
+			)),
+		},
+	}
+
 	client := &GH{
 		client: github.NewClient(httpClient),
 		ctx:    ctx,

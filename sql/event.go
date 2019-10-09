@@ -56,7 +56,7 @@ func newMigrator(db *sql.DB) (*migrate.Migrate, error) {
 }
 
 func (m *Repository) Save(e event.Event) error {
-	_, err := m.db.Exec("INSERT INTO events (`repository`, `pr_number`) VALUES ($1, $2)", e.Repository, e.PrNumber)
+	_, err := m.db.Exec("INSERT INTO pr_events (`repository`, `pr_number`) VALUES (?, ?)", e.Repository, e.PrNumber)
 	if err != nil {
 		return err
 	}

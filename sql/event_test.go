@@ -5,6 +5,7 @@ import (
 	"github.com/krlvi/github-devstats/event"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestRepository_Save(t *testing.T) {
@@ -46,7 +47,17 @@ func NewRepo(t *testing.T) *Repository {
 
 func FakeEvent() event.Event {
 	return event.Event{
-		PrNumber:   123,
-		Repository: "foo-bar",
+		PrNumber:           123,
+		Repository:         "foo-bar",
+		MergedAt:           time.Unix(1570656320, 0),
+		TimeToMergeSeconds: 12345,
+		BranchAgeSeconds:   22222,
+		LinesAdded:         8,
+		LinesRemoved:       4,
+		FilesChanged:       5,
+		CommitsCount:       11,
+		CommentsCount:      3,
+		AuthorId:           "abc",
+		AuthorName:         "Foo Barsson",
 	}
 }

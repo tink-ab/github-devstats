@@ -56,7 +56,32 @@ func newMigrator(db *sql.DB) (*migrate.Migrate, error) {
 }
 
 func (r *Repository) Save(e event.Event) error {
-	_, err := r.db.Exec("INSERT INTO pr_events (`repository`, `pr_number`) VALUES (?, ?)", e.Repository, e.PrNumber)
+	_, err := r.db.Exec("INSERT INTO pr_events ("+
+		"`repository`,"+
+		"`pr_number`,"+
+		"`merged_at`,"+
+		"`time_to_merge_seconds`,"+
+		"`branch_age_seconds`,"+
+		"`lines_added`,"+
+		"`lines_removed`,"+
+		"`files_changed`,"+
+		"`commits_count`,"+
+		"`comments_count`,"+
+		"`author_id`,"+
+		"`author_name`"+
+		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		e.Repository,
+		e.PrNumber,
+		e.MergedAt,
+		e.TimeToMergeSeconds,
+		e.BranchAgeSeconds,
+		e.LinesAdded,
+		e.LinesRemoved,
+		e.FilesChanged,
+		e.CommitsCount,
+		e.CommentsCount,
+		e.AuthorId,
+		e.AuthorName)
 	if err != nil {
 		return err
 	}
@@ -64,8 +89,34 @@ func (r *Repository) Save(e event.Event) error {
 }
 
 func (r *Repository) get(repository string, pr_number int) event.Event {
-	row := r.db.QueryRow("SELECT * FROM pr_events WHERE repository = ? AND pr_number = ?", repository, pr_number)
+	row := r.db.QueryRow("SELECT" +
+		"`repository`,"+
+		"`pr_number`,"+
+		"`merged_at`,"+
+		"`time_to_merge_seconds`,"+
+		"`branch_age_seconds`,"+
+		"`lines_added`,"+
+		"`lines_removed`,"+
+		"`files_changed`,"+
+		"`commits_count`,"+
+		"`comments_count`,"+
+		"`author_id`,"+
+		"`author_name`"+
+		" FROM pr_events WHERE repository = ? AND pr_number = ?", repository, pr_number)
 	e := event.Event{}
-	_ = row.Scan(&e.Repository, &e.PrNumber)
+	_ = row.Scan(
+		&e.Repository,
+		&e.PrNumber,
+		&e.MergedAt,
+		&e.TimeToMergeSeconds,
+		&e.BranchAgeSeconds,
+		&e.LinesAdded,
+		&e.LinesRemoved,
+		&e.FilesChanged,
+		&e.CommitsCount,
+		&e.CommentsCount,
+		&e.AuthorId,
+		&e.AuthorName,
+	)
 	return e
 }

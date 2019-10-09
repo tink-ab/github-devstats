@@ -33,6 +33,7 @@ func main() {
 	if err != nil {
 		log.Panicln("could not fetch pull requests:", err)
 	}
+	log.Println("processing", len(prIssues), "pull requests")
 	event.ProcessPRIssues(c, prIssues)
 }
 

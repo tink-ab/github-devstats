@@ -65,7 +65,6 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string) Event {
 		Repository:               repo,
 		MergedAt:                 p.GetMergedAt(),
 		TimeToMergeSeconds:       p.GetMergedAt().Sub(p.GetCreatedAt()).Seconds(),
-		BranchAgeSeconds:         branchAge(c, repo, p.GetBase().GetSHA(), p.GetMergeCommitSHA()),
 		LinesAdded:               p.GetAdditions(),
 		LinesRemoved:             p.GetDeletions(),
 		FilesChanged:             p.GetChangedFiles(),
@@ -90,9 +89,16 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string) Event {
 
 	commits, err := c.GetPRCommits(p.GetNumber(), repo)
 	if err == nil {
+		var firstCommit *github.Commit
 		for _, com := range commits {
 			e.CommitsByType[commitType(com.GetCommit().GetMessage())]++
+			if firstCommit == nil {
+				firstCommit = com.GetCommit()
+			} else if com.GetCommit().GetCommitter().GetDate().Before(firstCommit.GetCommitter().GetDate()) {
+				firstCommit = com.GetCommit()
+			}
 		}
+		e.BranchAgeSeconds = branchAge(c, repo, firstCommit, p.GetMergeCommitSHA())
 	}
 
 	files, err := c.GetPRFiles(p.GetNumber(), repo)
@@ -215,14 +221,10 @@ func commitType(msg string) string {
 	return "uncategorized"
 }
 
-func branchAge(c *client.GH, repo, base, merge string) float64 {
-	baseCommit, err := c.GetCommit(repo, base)
-	if err != nil {
-		return -1
-	}
+func branchAge(c *client.GH, repo string, start *github.Commit, merge string) float64 {
 	mergeCommit, err := c.GetCommit(repo, merge)
 	if err != nil {
 		return -1
 	}
-	return mergeCommit.GetAuthor().GetDate().Sub(baseCommit.GetAuthor().GetDate()).Seconds()
+	return mergeCommit.GetCommitter().GetDate().Sub(start.GetCommitter().GetDate()).Seconds()
 }

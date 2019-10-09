@@ -21,3 +21,5 @@ bazel-*
 
 # vim swap files
 *.swp
+
+.mysql-data

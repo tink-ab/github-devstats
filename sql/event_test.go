@@ -3,17 +3,17 @@ package sql
 import (
 	"database/sql"
 	"github.com/krlvi/github-devstats/event"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestRepository_Save(t *testing.T) {
 	r := NewRepo(t)
 	defer r.migrateDown()
-	err := r.Save(FakeEvent())
-	if err != nil {
-		t.Log(err)
-		t.Fail()
-	}
+	e := FakeEvent()
+	assert.NoError(t, r.Save(e))
+	persisted := r.get(e.Repository, e.PrNumber)
+	assert.Equal(t, e, persisted)
 }
 
 func TestRepository_Migrations(t *testing.T) {

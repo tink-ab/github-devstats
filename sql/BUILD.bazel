@@ -21,4 +21,8 @@ go_test(
         "//sql/migrations:migrations",
     ],
     embed = [":go_default_library"],
+    deps = [
+        "//event:go_default_library",
+        "@com_github_stretchr_testify//assert:go_default_library",
+    ],
 )

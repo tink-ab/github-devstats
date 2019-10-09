@@ -55,10 +55,17 @@ func newMigrator(db *sql.DB) (*migrate.Migrate, error) {
 	)
 }
 
-func (m *Repository) Save(e event.Event) error {
-	_, err := m.db.Exec("INSERT INTO pr_events (`repository`, `pr_number`) VALUES (?, ?)", e.Repository, e.PrNumber)
+func (r *Repository) Save(e event.Event) error {
+	_, err := r.db.Exec("INSERT INTO pr_events (`repository`, `pr_number`) VALUES (?, ?)", e.Repository, e.PrNumber)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (r *Repository) get(repository string, pr_number int) event.Event {
+	row := r.db.QueryRow("SELECT * FROM pr_events WHERE repository = ? AND pr_number = ?", repository, pr_number)
+	e := event.Event{}
+	_ = row.Scan(&e.Repository, &e.PrNumber)
+	return e
 }

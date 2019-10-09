@@ -28,7 +28,6 @@ type Event struct {
 	CommitsByType            map[string]int `json:"commits_by_type"`
 	FilesAddedByExtension    map[string]int `json:"files_added_by_extension"`
 	FilesModifiedByExtension map[string]int `json:"files_modified_by_extension"`
-	FilesModifiedByName      map[string]int `json:"files_modified_by_name"`
 	JavaTestFilesModified    int            `json:"java_test_files_modified"`
 	JavaTestsAdded           int            `json:"java_tests_added"`
 	TimeToApproveSeconds     float64        `json:"time_to_approve_seconds"`
@@ -78,7 +77,6 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string) Event {
 		CommitsByType:            map[string]int{},
 		FilesAddedByExtension:    map[string]int{},
 		FilesModifiedByExtension: map[string]int{},
-		FilesModifiedByName:      map[string]int{},
 		JavaTestFilesModified:    0,
 		JavaTestsAdded:           0,
 		TimeToApproveSeconds:     0,
@@ -103,7 +101,6 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string) Event {
 			fileExt := fileExtension(f.GetFilename())
 			if f.GetStatus() == "modified" {
 				e.FilesModifiedByExtension[fileExt]++
-				e.FilesModifiedByName[f.GetFilename()]++
 				if strings.HasSuffix(f.GetFilename(), "Test.java") {
 					e.JavaTestFilesModified++
 				}

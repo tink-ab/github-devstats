@@ -3,6 +3,7 @@ package event
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -28,6 +29,8 @@ type Event struct {
 	FilesAddedByExtension    map[string]int `json:"files_added_by_extension"`
 	FilesModifiedByExtension map[string]int `json:"files_modified_by_extension"`
 	FilesModifiedByName      map[string]int `json:"files_modified_by_name"`
+	JavaTestFilesModified    int            `json:"java_test_files_modified"`
+	JavaTestsAdded           int            `json:"java_tests_added"`
 	TimeToApproveSeconds     float64        `json:"time_to_approve_seconds"`
 	ApproverId               string         `json:"approver_id"`
 	ApproverName             string         `json:"approver_name"`
@@ -76,6 +79,8 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string) Event {
 		FilesAddedByExtension:    map[string]int{},
 		FilesModifiedByExtension: map[string]int{},
 		FilesModifiedByName:      map[string]int{},
+		JavaTestFilesModified:    0,
+		JavaTestsAdded:           0,
 		TimeToApproveSeconds:     0,
 		ApproverId:               "",
 		ApproverName:             "",
@@ -95,12 +100,19 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string) Event {
 	files, err := c.GetPRFiles(p.GetNumber(), repo)
 	if err == nil {
 		for _, f := range files {
+			fileExt := fileExtension(f.GetFilename())
 			if f.GetStatus() == "modified" {
-				e.FilesModifiedByExtension[fileExtension(f.GetFilename())]++
+				e.FilesModifiedByExtension[fileExt]++
 				e.FilesModifiedByName[f.GetFilename()]++
+				if strings.HasSuffix(f.GetFilename(), "Test.java") {
+					e.JavaTestFilesModified++
+				}
 			}
 			if f.GetStatus() == "added" {
-				e.FilesAddedByExtension[fileExtension(f.GetFilename())]++
+				e.FilesAddedByExtension[fileExt]++
+			}
+			if strings.HasSuffix(f.GetFilename(), "Test.java") {
+				e.JavaTestsAdded = javaTestsAddedInPatch(f.GetPatch())
 			}
 		}
 	}
@@ -124,6 +136,21 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string) Event {
 		}
 	}
 	return e
+}
+
+func javaTestsAddedInPatch(patch string) int {
+	javaTestAdded := regexp.MustCompile(`^\+\s*@Test`)
+	javaTestRemoved := regexp.MustCompile(`^-\s*@Test`)
+	added := 0
+	removed := 0
+	for _, line := range strings.Split(patch, "\n") {
+		if javaTestAdded.MatchString(line) {
+			added++
+		} else if javaTestRemoved.MatchString(line) {
+			removed++
+		}
+	}
+	return added - removed
 }
 
 func crossTeam(from, to []string) bool {

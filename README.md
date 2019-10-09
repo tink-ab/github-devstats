@@ -3,7 +3,6 @@
 This application integrates with the GitHub API in order to collect information about merged Pull Requests within an organization.
 Each PR that gets merged produces an event with metadata in the following format:
 ```go
-
 type Event struct {
 	PrNumber                 int            `json:"pr_number"`
 	Repository               string         `json:"repository"`
@@ -21,7 +20,8 @@ type Event struct {
 	CommitsByType            map[string]int `json:"commits_by_type"`
 	FilesAddedByExtension    map[string]int `json:"files_added_by_extension"`
 	FilesModifiedByExtension map[string]int `json:"files_modified_by_extension"`
-	FilesModifiedByName      map[string]int `json:"files_modified_by_name"`
+	JavaTestFilesModified    int            `json:"java_test_files_modified"`
+	JavaTestsAdded           int            `json:"java_tests_added"`
 	TimeToApproveSeconds     float64        `json:"time_to_approve_seconds"`
 	ApproverId               string         `json:"approver_id"`
 	ApproverName             string         `json:"approver_name"`

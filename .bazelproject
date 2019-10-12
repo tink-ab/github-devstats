@@ -1,3 +1,6 @@
+build_flags:
+  --test_output=all
+
 directories:
   .
 

@@ -24,6 +24,11 @@ func main() {
 		daysAgo, _ = strconv.Atoi(os.Args[3])
 	}
 
+	toDB := false
+	if len(os.Args) > 4 && os.Args[4] == "toDB" {
+		toDB = true
+	}
+
 	log.Println("fetching github teams and their members for", org)
 	c := client.NewClient(org, accessToken)
 
@@ -33,8 +38,13 @@ func main() {
 	if err != nil {
 		log.Panicln("could not fetch pull requests:", err)
 	}
-	log.Println("processing", len(prIssues), "pull requests")
-	event.ProcessPRIssues(c, prIssues)
+
+	if toDB {
+		log.Println("ToDB is TODO")
+	} else {
+		log.Println("outputting", len(prIssues), "pull requests to stdout")
+		event.ProcessPRIssues(c, prIssues)
+	}
 }
 
 func printUsageAndExit() {

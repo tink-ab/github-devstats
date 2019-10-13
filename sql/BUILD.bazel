@@ -2,7 +2,10 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
-    srcs = ["event.go"],
+    srcs = [
+        "db.go",
+        "event.go",
+    ],
     importpath = "github.com/krlvi/github-devstats/sql",
     visibility = ["//visibility:public"],
     deps = [

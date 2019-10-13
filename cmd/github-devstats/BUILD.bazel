@@ -8,6 +8,7 @@ go_library(
     deps = [
         "//client:go_default_library",
         "//event:go_default_library",
+        "//sql:go_default_library",
     ],
 )
 

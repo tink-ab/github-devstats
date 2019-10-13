@@ -4,14 +4,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/krlvi/github-devstats/event"
-	"log"
-	"os"
-
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/krlvi/github-devstats/event"
+	"log"
+	"os"
 )
 
 type Repository struct {
@@ -66,34 +65,10 @@ func (r *Repository) Save(e event.Event) error {
 		return err
 	}
 	_, err = r.db.Exec("INSERT INTO pr_events ("+
-		"`repository`,"+
-		"`pr_number`,"+
-		"`merged_at`,"+
-		"`time_to_merge_seconds`,"+
-		"`branch_age_seconds`,"+
-		"`lines_added`,"+
-		"`lines_removed`,"+
-		"`files_changed`,"+
-		"`commits_count`,"+
-		"`comments_count`,"+
-		"`author_id`,"+
-		"`author_name`,"+
-		"`author_teams`,"+
-		"`commits_by_type`,"+
-		"`files_added_by_extension`,"+
-		"`files_modified_by_extension`,"+
-		"`java_test_files_modified`,"+
-		"`java_tests_added`,"+
-		"`time_to_approve_seconds`,"+
-		"`approver_id`,"+
-		"`approver_name`,"+
-		"`approver_teams`,"+
-		"`cross_team`,"+
-		"`dismiss_review_count`,"+
-		"`changes_requested_count`"+
+		tableColumns()+
 		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		e.Repository,
 		e.PrNumber,
+		e.Repository,
 		e.MergedAt,
 		e.TimeToMergeSeconds,
 		e.BranchAgeSeconds,
@@ -125,32 +100,8 @@ func (r *Repository) Save(e event.Event) error {
 }
 
 func (r *Repository) get(repository string, pr_number int) event.Event {
-	row := r.db.QueryRow("SELECT"+
-		"`repository`,"+
-		"`pr_number`,"+
-		"`merged_at`,"+
-		"`time_to_merge_seconds`,"+
-		"`branch_age_seconds`,"+
-		"`lines_added`,"+
-		"`lines_removed`,"+
-		"`files_changed`,"+
-		"`commits_count`,"+
-		"`comments_count`,"+
-		"`author_id`,"+
-		"`author_name`,"+
-		"`author_teams`,"+
-		"`commits_by_type`,"+
-		"`files_added_by_extension`,"+
-		"`files_modified_by_extension`,"+
-		"`java_test_files_modified`,"+
-		"`java_tests_added`,"+
-		"`time_to_approve_seconds`,"+
-		"`approver_id`,"+
-		"`approver_name`,"+
-		"`approver_teams`,"+
-		"`cross_team`,"+
-		"`dismiss_review_count`,"+
-		"`changes_requested_count`"+
+	row := r.db.QueryRow("SELECT "+
+		tableColumns()+
 		" FROM pr_events WHERE repository = ? AND pr_number = ?", repository, pr_number)
 	e := event.Event{}
 	var authorTeams []byte
@@ -159,8 +110,8 @@ func (r *Repository) get(repository string, pr_number int) event.Event {
 	var filesModifiedByExtension []byte
 	var approverTeams []byte
 	_ = row.Scan(
-		&e.Repository,
 		&e.PrNumber,
+		&e.Repository,
 		&e.MergedAt,
 		&e.TimeToMergeSeconds,
 		&e.BranchAgeSeconds,
@@ -191,4 +142,32 @@ func (r *Repository) get(repository string, pr_number int) event.Event {
 	_ = json.Unmarshal(filesModifiedByExtension, &e.FilesModifiedByExtension)
 	_ = json.Unmarshal(approverTeams, &e.ApproverTeams)
 	return e
+}
+
+func tableColumns() string {
+	return "`pr_number`," +
+		"`repository`," +
+		"`merged_at`," +
+		"`time_to_merge_seconds`," +
+		"`branch_age_seconds`," +
+		"`lines_added`," +
+		"`lines_removed`," +
+		"`files_changed`," +
+		"`commits_count`," +
+		"`comments_count`," +
+		"`author_id`," +
+		"`author_name`," +
+		"`author_teams`," +
+		"`commits_by_type`," +
+		"`files_added_by_extension`," +
+		"`files_modified_by_extension`," +
+		"`java_test_files_modified`," +
+		"`java_tests_added`," +
+		"`time_to_approve_seconds`," +
+		"`approver_id`," +
+		"`approver_name`," +
+		"`approver_teams`," +
+		"`cross_team`," +
+		"`dismiss_review_count`," +
+		"`changes_requested_count`"
 }

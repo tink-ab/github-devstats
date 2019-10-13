@@ -9,8 +9,8 @@ import (
 )
 
 func TestRepository_Save(t *testing.T) {
-	r := NewRepo(t)
-	defer r.migrateDown()
+	r, err := NewRepo()
+	assert.NoError(t, err)
 	e := FakeEvent()
 	assert.NoError(t, r.Save(e))
 	persisted := r.get(e.Repository, e.PrNumber)
@@ -18,38 +18,32 @@ func TestRepository_Save(t *testing.T) {
 }
 
 func TestRepository_Migrations(t *testing.T) {
-	r := NewRepo(t)
-	err := r.migrateDown()
-	if err != nil {
-		t.Log(err)
-		panic(err)
-	}
+	_, err := NewRepo()
+	assert.NoError(t, err)
 }
 
-func NewRepo(t *testing.T) *Repository {
-	db, err := sql.Open("mysql", "devstats:devstats@tcp(127.0.0.1:3306)/devstats?multiStatements=true")
+func NewRepo() (*Repository, error) {
+	db, err := sql.Open("mysql", "devstats:devstats@tcp(127.0.0.1:3306)/devstats?multiStatements=true&parseTime=true")
 	if err != nil {
-		t.Log(err)
-		panic(err)
+		return nil, err
 	}
 	r, err := NewRepository(db)
 	if err != nil {
-		t.Log(err)
-		panic(err)
+		return nil, err
 	}
+	_ = r.migrateDown()
 	err = r.MigrateUp()
 	if err != nil {
-		t.Log(err)
-		panic(err)
+		return nil, err
 	}
-	return r
+	return r, nil
 }
 
 func FakeEvent() event.Event {
 	return event.Event{
 		PrNumber:           123,
 		Repository:         "foo-bar",
-		MergedAt:           time.Unix(1570656320, 0),
+		MergedAt:           time.Unix(1570656320, 0).UTC(),
 		TimeToMergeSeconds: 12345,
 		BranchAgeSeconds:   22222,
 		LinesAdded:         8,

@@ -63,7 +63,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string) Event {
 	e := Event{
 		PrNumber:                 p.GetNumber(),
 		Repository:               repo,
-		MergedAt:                 p.GetMergedAt(),
+		MergedAt:                 p.GetMergedAt().UTC(),
 		TimeToMergeSeconds:       p.GetMergedAt().Sub(p.GetCreatedAt()).Seconds(),
 		LinesAdded:               p.GetAdditions(),
 		LinesRemoved:             p.GetDeletions(),

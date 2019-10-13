@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/go-github/github"
@@ -37,6 +38,18 @@ type Event struct {
 	CrossTeam                bool           `json:"cross_team"`
 	DismissReviewCount       int            `json:"dismiss_review_count"`
 	ChangesRequestedCount    int            `json:"changes_requested_count"`
+}
+
+func DumpEvents(c *client.GH, issues []github.Issue, ch chan Event, wg *sync.WaitGroup) {
+	for _, i := range issues {
+		repo := repoUrlToName(i.GetRepositoryURL())
+		pr, err := c.GetPR(i.GetNumber(), repo)
+		if err != nil {
+			continue
+		}
+		wg.Add(1)
+		ch <- prToEvent(c, pr, repo)
+	}
 }
 
 func ProcessPRIssues(c *client.GH, issues []github.Issue) {

@@ -4,21 +4,23 @@ import (
 	"database/sql"
 	"github.com/krlvi/github-devstats/event"
 	"log"
+	"sync"
 )
 
-func Read(c <-chan event.Event) error {
+func New() (*sql.DB, error) {
 	db, err := sql.Open("mysql", "devstats:devstats@tcp(127.0.0.1:3306)/devstats?multiStatements=true&parseTime=true")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer db.Close()
-	repo, err := NewRepository(db)
-	if err != nil {
-		return err
+	return db, nil
+}
+
+func ReadAndPersist(repo *Repository, c chan event.Event, wg *sync.WaitGroup) {
+	for {
+		err := repo.Save(<-c)
+		if err != nil {
+			log.Println(err)
+		}
+		wg.Done()
 	}
-	err = repo.Save(<-c)
-	if err != nil {
-		log.Println(err)
-	}
-	return nil
 }

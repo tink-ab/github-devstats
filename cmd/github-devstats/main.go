@@ -1,9 +1,11 @@
 package main
 
 import (
+	"github.com/krlvi/github-devstats/sql"
 	"log"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/krlvi/github-devstats/client"
@@ -40,7 +42,21 @@ func main() {
 	}
 
 	if toDB {
-		log.Println("ToDB is TODO")
+		log.Println("writing", len(prIssues), "pull requests to db")
+		db, err := sql.New()
+		if err != nil {
+			panic(err)
+		}
+		repo, err := sql.NewRepository(db)
+		if err != nil {
+			panic(err)
+		}
+		ch := make(chan event.Event, 10)
+		var wg sync.WaitGroup
+		go sql.ReadAndPersist(repo, ch, &wg)
+		event.DumpEvents(c, prIssues, ch, &wg)
+		wg.Wait()
+		close(ch)
 	} else {
 		log.Println("outputting", len(prIssues), "pull requests to stdout")
 		event.ProcessPRIssues(c, prIssues)

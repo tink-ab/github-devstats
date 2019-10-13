@@ -66,6 +66,7 @@ func (r *Repository) Save(e event.Event) error {
 	if err != nil {
 		return err
 	}
+	log.Println("event at", e.MergedAt, "saving repo", e.Repository, "pr", e.PrNumber)
 	_, err = r.db.Exec("INSERT INTO pr_events ("+tableColumns()+") VALUES ("+tableColumnPlaceholders()+")",
 		e.PrNumber,
 		e.Repository,

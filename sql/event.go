@@ -58,6 +58,7 @@ func newMigrator(db *sql.DB) (*migrate.Migrate, error) {
 
 func (r *Repository) Save(e event.Event) error {
 	authorTeams, err := json.Marshal(e.AuthorTeams)
+	commitsByType, err := json.Marshal(e.CommitsByType)
 	if err != nil {
 		return err
 	}
@@ -74,8 +75,9 @@ func (r *Repository) Save(e event.Event) error {
 		"`comments_count`,"+
 		"`author_id`,"+
 		"`author_name`,"+
-		"`author_teams`"+
-		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		"`author_teams`,"+
+		"`commits_by_type`"+
+		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		e.Repository,
 		e.PrNumber,
 		e.MergedAt,
@@ -88,7 +90,8 @@ func (r *Repository) Save(e event.Event) error {
 		e.CommentsCount,
 		e.AuthorId,
 		e.AuthorName,
-		authorTeams)
+		authorTeams,
+		commitsByType)
 	if err != nil {
 		return err
 	}
@@ -109,10 +112,12 @@ func (r *Repository) get(repository string, pr_number int) event.Event {
 		"`comments_count`,"+
 		"`author_id`,"+
 		"`author_name`,"+
-		"`author_teams`"+
+		"`author_teams`,"+
+		"`commits_by_type`"+
 		" FROM pr_events WHERE repository = ? AND pr_number = ?", repository, pr_number)
 	e := event.Event{}
 	var authorTeams []byte
+	var commitsByType []byte
 	_ = row.Scan(
 		&e.Repository,
 		&e.PrNumber,
@@ -127,7 +132,9 @@ func (r *Repository) get(repository string, pr_number int) event.Event {
 		&e.AuthorId,
 		&e.AuthorName,
 		&authorTeams,
+		&commitsByType,
 	)
 	_ = json.Unmarshal(authorTeams, &e.AuthorTeams)
+	_ = json.Unmarshal(commitsByType, &e.CommitsByType)
 	return e
 }

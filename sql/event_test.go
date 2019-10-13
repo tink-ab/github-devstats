@@ -54,5 +54,6 @@ func FakeEvent() event.Event {
 		AuthorId:           "abc",
 		AuthorName:         "Foo Barsson",
 		AuthorTeams:        []string{"foo-team", "bar-squad"},
+		CommitsByType:      map[string]int{"fix": 1, "feat": 2},
 	}
 }

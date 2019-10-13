@@ -57,5 +57,10 @@ func FakeEvent() event.Event {
 		CommitsByType:            map[string]int{"fix": 1, "feat": 2},
 		FilesAddedByExtension:    map[string]int{"java": 4, "BUILD": 1},
 		FilesModifiedByExtension: map[string]int{"go": 4, "py": 1},
+		JavaTestFilesModified:    8,
+		JavaTestsAdded:           17,
+		TimeToApproveSeconds:     123456789,
+		ApproverId:               "cba",
+		ApproverName:             "Bar Foosson",
 	}
 }

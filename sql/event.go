@@ -80,8 +80,13 @@ func (r *Repository) Save(e event.Event) error {
 		"`author_teams`,"+
 		"`commits_by_type`,"+
 		"`files_added_by_extension`,"+
-		"`files_modified_by_extension`"+
-		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		"`files_modified_by_extension`,"+
+		"`java_test_files_modified`,"+
+		"`java_tests_added`,"+
+		"`time_to_approve_seconds`,"+
+		"`approver_id`,"+
+		"`approver_name`"+
+		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		e.Repository,
 		e.PrNumber,
 		e.MergedAt,
@@ -97,7 +102,13 @@ func (r *Repository) Save(e event.Event) error {
 		authorTeams,
 		commitsByType,
 		filesAddedByExtension,
-		filesModifiedByExtension)
+		filesModifiedByExtension,
+		e.JavaTestFilesModified,
+		e.JavaTestsAdded,
+		e.TimeToApproveSeconds,
+		e.ApproverId,
+		e.ApproverName,
+		)
 	if err != nil {
 		return err
 	}
@@ -121,7 +132,12 @@ func (r *Repository) get(repository string, pr_number int) event.Event {
 		"`author_teams`,"+
 		"`commits_by_type`,"+
 		"`files_added_by_extension`,"+
-		"`files_modified_by_extension`"+
+		"`files_modified_by_extension`,"+
+		"`java_test_files_modified`,"+
+		"`java_tests_added`,"+
+		"`time_to_approve_seconds`,"+
+		"`approver_id`,"+
+		"`approver_name`"+
 		" FROM pr_events WHERE repository = ? AND pr_number = ?", repository, pr_number)
 	e := event.Event{}
 	var authorTeams []byte
@@ -145,6 +161,11 @@ func (r *Repository) get(repository string, pr_number int) event.Event {
 		&commitsByType,
 		&filesAddedByExtension,
 		&filesModifiedByExtension,
+		&e.JavaTestFilesModified,
+		&e.JavaTestsAdded,
+		&e.TimeToApproveSeconds,
+		&e.ApproverId,
+		&e.ApproverName,
 	)
 	_ = json.Unmarshal(authorTeams, &e.AuthorTeams)
 	_ = json.Unmarshal(commitsByType, &e.CommitsByType)

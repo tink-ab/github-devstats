@@ -59,6 +59,8 @@ func newMigrator(db *sql.DB) (*migrate.Migrate, error) {
 func (r *Repository) Save(e event.Event) error {
 	authorTeams, err := json.Marshal(e.AuthorTeams)
 	commitsByType, err := json.Marshal(e.CommitsByType)
+	filesAddedByExtension, err := json.Marshal(e.FilesAddedByExtension)
+	filesModifiedByExtension, err := json.Marshal(e.FilesModifiedByExtension)
 	if err != nil {
 		return err
 	}
@@ -76,8 +78,10 @@ func (r *Repository) Save(e event.Event) error {
 		"`author_id`,"+
 		"`author_name`,"+
 		"`author_teams`,"+
-		"`commits_by_type`"+
-		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		"`commits_by_type`,"+
+		"`files_added_by_extension`,"+
+		"`files_modified_by_extension`"+
+		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		e.Repository,
 		e.PrNumber,
 		e.MergedAt,
@@ -91,7 +95,9 @@ func (r *Repository) Save(e event.Event) error {
 		e.AuthorId,
 		e.AuthorName,
 		authorTeams,
-		commitsByType)
+		commitsByType,
+		filesAddedByExtension,
+		filesModifiedByExtension)
 	if err != nil {
 		return err
 	}
@@ -99,7 +105,7 @@ func (r *Repository) Save(e event.Event) error {
 }
 
 func (r *Repository) get(repository string, pr_number int) event.Event {
-	row := r.db.QueryRow("SELECT" +
+	row := r.db.QueryRow("SELECT"+
 		"`repository`,"+
 		"`pr_number`,"+
 		"`merged_at`,"+
@@ -113,11 +119,15 @@ func (r *Repository) get(repository string, pr_number int) event.Event {
 		"`author_id`,"+
 		"`author_name`,"+
 		"`author_teams`,"+
-		"`commits_by_type`"+
+		"`commits_by_type`,"+
+		"`files_added_by_extension`,"+
+		"`files_modified_by_extension`"+
 		" FROM pr_events WHERE repository = ? AND pr_number = ?", repository, pr_number)
 	e := event.Event{}
 	var authorTeams []byte
 	var commitsByType []byte
+	var filesAddedByExtension []byte
+	var filesModifiedByExtension []byte
 	_ = row.Scan(
 		&e.Repository,
 		&e.PrNumber,
@@ -133,8 +143,12 @@ func (r *Repository) get(repository string, pr_number int) event.Event {
 		&e.AuthorName,
 		&authorTeams,
 		&commitsByType,
+		&filesAddedByExtension,
+		&filesModifiedByExtension,
 	)
 	_ = json.Unmarshal(authorTeams, &e.AuthorTeams)
 	_ = json.Unmarshal(commitsByType, &e.CommitsByType)
+	_ = json.Unmarshal(filesAddedByExtension, &e.FilesAddedByExtension)
+	_ = json.Unmarshal(filesModifiedByExtension, &e.FilesModifiedByExtension)
 	return e
 }

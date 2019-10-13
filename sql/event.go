@@ -11,6 +11,8 @@ import (
 	"github.com/krlvi/github-devstats/event"
 	"log"
 	"os"
+	"reflect"
+	"strings"
 )
 
 type Repository struct {
@@ -64,9 +66,7 @@ func (r *Repository) Save(e event.Event) error {
 	if err != nil {
 		return err
 	}
-	_, err = r.db.Exec("INSERT INTO pr_events ("+
-		tableColumns()+
-		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	_, err = r.db.Exec("INSERT INTO pr_events ("+tableColumns()+") VALUES ("+tableColumnPlaceholders()+")",
 		e.PrNumber,
 		e.Repository,
 		e.MergedAt,
@@ -99,10 +99,10 @@ func (r *Repository) Save(e event.Event) error {
 	return nil
 }
 
+// Test only
 func (r *Repository) get(repository string, pr_number int) event.Event {
-	row := r.db.QueryRow("SELECT "+
-		tableColumns()+
-		" FROM pr_events WHERE repository = ? AND pr_number = ?", repository, pr_number)
+	row := r.db.QueryRow("SELECT "+tableColumns()+" FROM pr_events WHERE repository = ? AND pr_number = ?",
+		repository, pr_number)
 	e := event.Event{}
 	var authorTeams []byte
 	var commitsByType []byte
@@ -145,29 +145,27 @@ func (r *Repository) get(repository string, pr_number int) event.Event {
 }
 
 func tableColumns() string {
-	return "`pr_number`," +
-		"`repository`," +
-		"`merged_at`," +
-		"`time_to_merge_seconds`," +
-		"`branch_age_seconds`," +
-		"`lines_added`," +
-		"`lines_removed`," +
-		"`files_changed`," +
-		"`commits_count`," +
-		"`comments_count`," +
-		"`author_id`," +
-		"`author_name`," +
-		"`author_teams`," +
-		"`commits_by_type`," +
-		"`files_added_by_extension`," +
-		"`files_modified_by_extension`," +
-		"`java_test_files_modified`," +
-		"`java_tests_added`," +
-		"`time_to_approve_seconds`," +
-		"`approver_id`," +
-		"`approver_name`," +
-		"`approver_teams`," +
-		"`cross_team`," +
-		"`dismiss_review_count`," +
-		"`changes_requested_count`"
+	val := reflect.ValueOf(event.Event{})
+	var sb strings.Builder
+	for i := 0; i < val.Type().NumField(); i++ {
+		sb.WriteRune('`')
+		sb.WriteString(val.Type().Field(i).Tag.Get("json"))
+		sb.WriteRune('`')
+		if i < val.Type().NumField()-1 {
+			sb.WriteRune(',')
+		}
+	}
+	return sb.String()
+}
+
+func tableColumnPlaceholders() string {
+	val := reflect.ValueOf(event.Event{})
+	var sb strings.Builder
+	for i := 0; i < val.Type().NumField(); i++ {
+		sb.WriteRune('?')
+		if i < val.Type().NumField()-1 {
+			sb.WriteRune(',')
+		}
+	}
+	return sb.String()
 }

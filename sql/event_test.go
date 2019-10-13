@@ -53,5 +53,6 @@ func FakeEvent() event.Event {
 		CommentsCount:      3,
 		AuthorId:           "abc",
 		AuthorName:         "Foo Barsson",
+		AuthorTeams:        []string{"foo-team", "bar-squad"},
 	}
 }

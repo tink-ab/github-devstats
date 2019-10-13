@@ -2,6 +2,7 @@ package sql
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/krlvi/github-devstats/event"
 	"log"
@@ -56,7 +57,11 @@ func newMigrator(db *sql.DB) (*migrate.Migrate, error) {
 }
 
 func (r *Repository) Save(e event.Event) error {
-	_, err := r.db.Exec("INSERT INTO pr_events ("+
+	authorTeams, err := json.Marshal(e.AuthorTeams)
+	if err != nil {
+		return err
+	}
+	_, err = r.db.Exec("INSERT INTO pr_events ("+
 		"`repository`,"+
 		"`pr_number`,"+
 		"`merged_at`,"+
@@ -68,8 +73,9 @@ func (r *Repository) Save(e event.Event) error {
 		"`commits_count`,"+
 		"`comments_count`,"+
 		"`author_id`,"+
-		"`author_name`"+
-		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		"`author_name`,"+
+		"`author_teams`"+
+		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		e.Repository,
 		e.PrNumber,
 		e.MergedAt,
@@ -81,7 +87,8 @@ func (r *Repository) Save(e event.Event) error {
 		e.CommitsCount,
 		e.CommentsCount,
 		e.AuthorId,
-		e.AuthorName)
+		e.AuthorName,
+		authorTeams)
 	if err != nil {
 		return err
 	}
@@ -101,9 +108,11 @@ func (r *Repository) get(repository string, pr_number int) event.Event {
 		"`commits_count`,"+
 		"`comments_count`,"+
 		"`author_id`,"+
-		"`author_name`"+
+		"`author_name`,"+
+		"`author_teams`"+
 		" FROM pr_events WHERE repository = ? AND pr_number = ?", repository, pr_number)
 	e := event.Event{}
+	var authorTeams []byte
 	_ = row.Scan(
 		&e.Repository,
 		&e.PrNumber,
@@ -117,6 +126,8 @@ func (r *Repository) get(repository string, pr_number int) event.Event {
 		&e.CommentsCount,
 		&e.AuthorId,
 		&e.AuthorName,
+		&authorTeams,
 	)
+	_ = json.Unmarshal(authorTeams, &e.AuthorTeams)
 	return e
 }

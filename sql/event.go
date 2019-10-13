@@ -61,6 +61,7 @@ func (r *Repository) Save(e event.Event) error {
 	commitsByType, err := json.Marshal(e.CommitsByType)
 	filesAddedByExtension, err := json.Marshal(e.FilesAddedByExtension)
 	filesModifiedByExtension, err := json.Marshal(e.FilesModifiedByExtension)
+	approverTeams, err := json.Marshal(e.ApproverTeams)
 	if err != nil {
 		return err
 	}
@@ -85,8 +86,12 @@ func (r *Repository) Save(e event.Event) error {
 		"`java_tests_added`,"+
 		"`time_to_approve_seconds`,"+
 		"`approver_id`,"+
-		"`approver_name`"+
-		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		"`approver_name`,"+
+		"`approver_teams`,"+
+		"`cross_team`,"+
+		"`dismiss_review_count`,"+
+		"`changes_requested_count`"+
+		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		e.Repository,
 		e.PrNumber,
 		e.MergedAt,
@@ -108,7 +113,11 @@ func (r *Repository) Save(e event.Event) error {
 		e.TimeToApproveSeconds,
 		e.ApproverId,
 		e.ApproverName,
-		)
+		approverTeams,
+		e.CrossTeam,
+		e.DismissReviewCount,
+		e.ChangesRequestedCount,
+	)
 	if err != nil {
 		return err
 	}
@@ -137,13 +146,18 @@ func (r *Repository) get(repository string, pr_number int) event.Event {
 		"`java_tests_added`,"+
 		"`time_to_approve_seconds`,"+
 		"`approver_id`,"+
-		"`approver_name`"+
+		"`approver_name`,"+
+		"`approver_teams`,"+
+		"`cross_team`,"+
+		"`dismiss_review_count`,"+
+		"`changes_requested_count`"+
 		" FROM pr_events WHERE repository = ? AND pr_number = ?", repository, pr_number)
 	e := event.Event{}
 	var authorTeams []byte
 	var commitsByType []byte
 	var filesAddedByExtension []byte
 	var filesModifiedByExtension []byte
+	var approverTeams []byte
 	_ = row.Scan(
 		&e.Repository,
 		&e.PrNumber,
@@ -166,10 +180,15 @@ func (r *Repository) get(repository string, pr_number int) event.Event {
 		&e.TimeToApproveSeconds,
 		&e.ApproverId,
 		&e.ApproverName,
+		&approverTeams,
+		&e.CrossTeam,
+		&e.DismissReviewCount,
+		&e.ChangesRequestedCount,
 	)
 	_ = json.Unmarshal(authorTeams, &e.AuthorTeams)
 	_ = json.Unmarshal(commitsByType, &e.CommitsByType)
 	_ = json.Unmarshal(filesAddedByExtension, &e.FilesAddedByExtension)
 	_ = json.Unmarshal(filesModifiedByExtension, &e.FilesModifiedByExtension)
+	_ = json.Unmarshal(approverTeams, &e.ApproverTeams)
 	return e
 }

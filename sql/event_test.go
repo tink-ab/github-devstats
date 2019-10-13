@@ -62,5 +62,9 @@ func FakeEvent() event.Event {
 		TimeToApproveSeconds:     123456789,
 		ApproverId:               "cba",
 		ApproverName:             "Bar Foosson",
+		ApproverTeams:            []string{"baz-team"},
+		CrossTeam:                true,
+		DismissReviewCount:       2,
+		ChangesRequestedCount:    1,
 	}
 }

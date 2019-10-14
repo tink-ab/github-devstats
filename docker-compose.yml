@@ -2,6 +2,7 @@ version: '2'
 services:
   db:
     image: mysql:latest
+    command: --default-authentication-plugin=mysql_native_password --sql_mode=""
     volumes:
       - "/tmp/mysql-data/db:/var/lib/mysql"
     restart: always
@@ -15,3 +16,10 @@ services:
       MYSQL_USER: devstats
       MYSQL_PASSWORD: devstats
 
+  grafana:
+    image: grafana/grafana:6.4.2
+    volumes:
+      - "/tmp/grafana-storage:/var/lib/grafana"
+    ports:
+      - 3000:3000
+    user: "104"

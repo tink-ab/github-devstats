@@ -1,0 +1,14 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["migration.go"],
+    importpath = "github.com/krlvi/github-devstats/sql/schema",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_go_sql_driver_mysql//:go_default_library",
+        "@com_github_golang_migrate_migrate_v4//:go_default_library",
+        "@com_github_golang_migrate_migrate_v4//database/mysql:go_default_library",
+        "@com_github_golang_migrate_migrate_v4//source/file:go_default_library",
+    ],
+)

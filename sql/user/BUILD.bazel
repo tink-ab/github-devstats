@@ -1,0 +1,22 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["user.go"],
+    importpath = "github.com/krlvi/github-devstats/sql/user",
+    visibility = ["//visibility:public"],
+    deps = ["@com_github_golang_migrate_migrate_v4//:go_default_library"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["user_test.go"],
+    data = [
+        "//sql/migrations:migrations",
+    ],
+    embed = [":go_default_library"],
+    deps = [
+        "//sql/schema:go_default_library",
+        "@com_github_stretchr_testify//assert:go_default_library",
+    ],
+)

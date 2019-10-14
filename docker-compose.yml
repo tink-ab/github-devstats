@@ -3,7 +3,7 @@ services:
   db:
     image: mysql:latest
     volumes:
-      - "/var/tmp/mysql-data/db:/var/lib/mysql"
+      - "/tmp/mysql-data/db:/var/lib/mysql"
     restart: always
     ports:
       - "3306:3306"

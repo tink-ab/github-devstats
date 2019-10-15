@@ -60,6 +60,7 @@ func (a *EventAccess) SavePREvent(e event.Event) error {
 	if err != nil {
 		return err
 	}
+	log.Println("persisting merge event at", e.MergedAt, "repo", e.Repository, "pr", e.PrNumber)
 	for commitType, count := range e.CommitsByType {
 		err = a.commits.SavePrCommitByType(e.PrNumber, commitType, count)
 		if err != nil {

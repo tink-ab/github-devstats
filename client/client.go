@@ -104,6 +104,9 @@ func (c *GH) GetUserTeams(login string) []string {
 }
 
 func (c *GH) GetTeamsByUser() map[string][]string {
+	if len(c.teams) > 0 {
+		return c.teams
+	}
 	teams, err := c.GetTeams()
 	if err != nil {
 		return nil

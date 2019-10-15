@@ -10,6 +10,10 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//event:go_default_library",
+        "//sql/commit:go_default_library",
+        "//sql/pr:go_default_library",
+        "//sql/schema:go_default_library",
+        "//sql/user:go_default_library",
         "@com_github_go_sql_driver_mysql//:go_default_library",
         "@com_github_golang_migrate_migrate_v4//:go_default_library",
         "@com_github_golang_migrate_migrate_v4//database/mysql:go_default_library",

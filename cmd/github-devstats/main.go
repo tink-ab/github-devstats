@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/google/go-github/github"
 	"github.com/krlvi/github-devstats/sql"
 	"log"
 	"os"
@@ -42,25 +43,46 @@ func main() {
 	}
 
 	if toDB {
-		log.Println("writing", len(prIssues), "pull requests to db")
-		db, err := sql.New()
+		err := processIntoDB(c, prIssues)
 		if err != nil {
 			panic(err)
 		}
-		repo, err := sql.NewRepository(db)
-		if err != nil {
-			panic(err)
-		}
-		ch := make(chan event.Event, 10)
-		var wg sync.WaitGroup
-		go sql.ReadAndPersist(repo, ch, &wg)
-		event.DumpEvents(c, prIssues, ch, &wg)
-		wg.Wait()
-		close(ch)
 	} else {
 		log.Println("outputting", len(prIssues), "pull requests to stdout")
 		event.ProcessPRIssues(c, prIssues)
 	}
+}
+
+func processIntoDB(c *client.GH, prIssues []github.Issue) error {
+	log.Println("creating a db connection")
+	db, err := sql.New()
+	if err != nil {
+		return err
+	}
+	events, err := sql.NewEventAccess(db)
+	if err != nil {
+		return err
+	}
+	for userId, teams := range c.GetTeamsByUser() {
+		userName := c.GetUserName(userId)
+		err := events.SaveUser(userId, userName)
+		if err != nil {
+			log.Println(err)
+		}
+		for _, team := range teams {
+			err = events.SaveUserTeam(userId, team)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}
+	ch := make(chan event.Event, 10)
+	var wg sync.WaitGroup
+	go sql.ReadAndPersist(events, ch, &wg)
+	event.DumpEvents(c, prIssues, ch, &wg)
+	wg.Wait()
+	close(ch)
+	return nil
 }
 
 func printUsageAndExit() {

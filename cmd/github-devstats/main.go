@@ -65,15 +65,9 @@ func processIntoDB(c *client.GH, prIssues []github.Issue) error {
 	}
 	for userId, teams := range c.GetTeamsByUser() {
 		userName := c.GetUserName(userId)
-		err := events.SaveUser(userId, userName)
-		if err != nil {
-			log.Println(err)
-		}
+		_ = events.SaveUser(userId, userName)
 		for _, team := range teams {
-			err = events.SaveUserTeam(userId, team)
-			if err != nil {
-				log.Println(err)
-			}
+			_ = events.SaveUserTeam(userId, team)
 		}
 	}
 	ch := make(chan event.Event, 10)

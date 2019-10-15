@@ -62,19 +62,19 @@ func (a *EventAccess) SavePREvent(e event.Event) error {
 	}
 	log.Println("persisting merge event at", e.MergedAt, "repo", e.Repository, "pr", e.PrNumber)
 	for commitType, count := range e.CommitsByType {
-		err = a.commits.SavePrCommitByType(e.PrNumber, commitType, count)
+		err = a.commits.SavePrCommitByType(e.PrNumber, e.Repository, commitType, count)
 		if err != nil {
 			log.Println(err)
 		}
 	}
 	for fileExt, count := range e.FilesAddedByExtension {
-		err = a.commits.SavePrFilesAddedByExt(e.PrNumber, fileExt, count)
+		err = a.commits.SavePrFilesAddedByExt(e.PrNumber, e.Repository, fileExt, count)
 		if err != nil {
 			log.Println(err)
 		}
 	}
 	for fileExt, count := range e.FilesModifiedByExtension {
-		err = a.commits.SavePrFilesModifiedByExt(e.PrNumber, fileExt, count)
+		err = a.commits.SavePrFilesModifiedByExt(e.PrNumber, e.Repository, fileExt, count)
 		if err != nil {
 			log.Println(err)
 		}

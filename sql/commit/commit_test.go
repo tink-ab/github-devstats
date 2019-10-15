@@ -13,33 +13,33 @@ func TestRepo_SavePrCommitByType(t *testing.T) {
 	r, prRepo, err := newRepo()
 	assert.NoError(t, err)
 	_ = prRepo.Save(event.Event{PrNumber: 333, Repository: "abc"})
-	err = r.SavePrCommitByType(333, "feat", 2)
-	err = r.SavePrCommitByType(333, "fix", 8)
+	err = r.SavePrCommitByType(333, "abc", "feat", 2)
+	err = r.SavePrCommitByType(333, "abc", "fix", 8)
 	assert.NoError(t, err)
-	assert.Equal(t, 2, r.getCommitTypesByPr(333)["feat"])
-	assert.Equal(t, 8, r.getCommitTypesByPr(333)["fix"])
+	assert.Equal(t, 2, r.getCommitTypesByPr(333, "abc")["feat"])
+	assert.Equal(t, 8, r.getCommitTypesByPr(333, "abc")["fix"])
 }
 
 func TestRepo_SavePrFilesAddedByExt(t *testing.T) {
 	r, prRepo, err := newRepo()
 	assert.NoError(t, err)
 	_ = prRepo.Save(event.Event{PrNumber: 333, Repository: "abc"})
-	err = r.SavePrFilesAddedByExt(333, "py", 3)
-	err = r.SavePrFilesAddedByExt(333, "java", 4)
+	err = r.SavePrFilesAddedByExt(333, "abc", "py", 3)
+	err = r.SavePrFilesAddedByExt(333, "abc", "java", 4)
 	assert.NoError(t, err)
-	assert.Equal(t, 3, r.getFilesAddedByPr(333)["py"])
-	assert.Equal(t, 4, r.getFilesAddedByPr(333)["java"])
+	assert.Equal(t, 3, r.getFilesAddedByPr(333, "abc")["py"])
+	assert.Equal(t, 4, r.getFilesAddedByPr(333, "abc")["java"])
 }
 
 func TestRepo_SavePrFilesModifiedByExt(t *testing.T) {
 	r, prRepo, err := newRepo()
 	assert.NoError(t, err)
 	_ = prRepo.Save(event.Event{PrNumber: 333, Repository: "abc"})
-	err = r.SavePrFilesModifiedByExt(333, "py", 3)
-	err = r.SavePrFilesModifiedByExt(333, "java", 4)
+	err = r.SavePrFilesModifiedByExt(333, "abc", "py", 3)
+	err = r.SavePrFilesModifiedByExt(333, "abc", "java", 4)
 	assert.NoError(t, err)
-	assert.Equal(t, 3, r.getFilesModifiedByPr(333)["py"])
-	assert.Equal(t, 4, r.getFilesModifiedByPr(333)["java"])
+	assert.Equal(t, 3, r.getFilesModifiedByPr(333, "abc")["py"])
+	assert.Equal(t, 4, r.getFilesModifiedByPr(333, "abc")["java"])
 }
 
 func newRepo() (*Repo, *pr.Repo, error) {

@@ -17,14 +17,14 @@ func NewRepo(db *sql.DB) *Repo {
 	return repo
 }
 
-func (r *Repo) SavePrCommitByType(pr_number int, commit_type string, count int) error {
-	_, err := r.db.Exec("INSERT INTO pr_commits_by_type (`pr_number`, `commit_type`, `count`) VALUES (?, ?, ?)",
-		pr_number, commit_type, count)
+func (r *Repo) SavePrCommitByType(pr_number int, repo, commit_type string, count int) error {
+	_, err := r.db.Exec("INSERT INTO pr_commits_by_type (`pr_number`, `repo`, `commit_type`, `count`) VALUES (?, ?, ?, ?)",
+		pr_number, repo, commit_type, count)
 	return err
 }
 
-func (r *Repo) getCommitTypesByPr(pr_number int) map[string]int {
-	rows, err := r.db.Query("SELECT `commit_type`, `count` FROM pr_commits_by_type WHERE pr_number = ?", pr_number)
+func (r *Repo) getCommitTypesByPr(pr_number int, repo string) map[string]int {
+	rows, err := r.db.Query("SELECT `commit_type`, `count` FROM pr_commits_by_type WHERE pr_number = ? AND repo = ?", pr_number, repo)
 	if err != nil {
 		return nil
 	}
@@ -41,14 +41,14 @@ func (r *Repo) getCommitTypesByPr(pr_number int) map[string]int {
 	return types
 }
 
-func (r *Repo) SavePrFilesAddedByExt(pr_number int, ext string, count int) error {
-	_, err := r.db.Exec("INSERT INTO pr_files_added_by_ext (`pr_number`, `ext`, `count`) VALUES (?, ?, ?)",
-		pr_number, ext, count)
+func (r *Repo) SavePrFilesAddedByExt(pr_number int, repo, ext string, count int) error {
+	_, err := r.db.Exec("INSERT INTO pr_files_added_by_ext (`pr_number`, `repo`, `ext`, `count`) VALUES (?, ?, ?, ?)",
+		pr_number, repo, ext, count)
 	return err
 }
 
-func (r *Repo) getFilesAddedByPr(pr_number int) map[string]int {
-	rows, err := r.db.Query("SELECT `ext`, `count` FROM pr_files_added_by_ext WHERE pr_number = ?", pr_number)
+func (r *Repo) getFilesAddedByPr(pr_number int, repo string) map[string]int {
+	rows, err := r.db.Query("SELECT `ext`, `count` FROM pr_files_added_by_ext WHERE pr_number = ? AND repo = ?", pr_number, repo)
 	if err != nil {
 		return nil
 	}
@@ -65,14 +65,14 @@ func (r *Repo) getFilesAddedByPr(pr_number int) map[string]int {
 	return files
 }
 
-func (r *Repo) SavePrFilesModifiedByExt(pr_number int, ext string, count int) error {
-	_, err := r.db.Exec("INSERT INTO pr_files_modified_by_ext (`pr_number`, `ext`, `count`) VALUES (?, ?, ?)",
-		pr_number, ext, count)
+func (r *Repo) SavePrFilesModifiedByExt(pr_number int, repo, ext string, count int) error {
+	_, err := r.db.Exec("INSERT INTO pr_files_modified_by_ext (`pr_number`, `repo`, `ext`, `count`) VALUES (?, ?, ?, ?)",
+		pr_number, repo, ext, count)
 	return err
 }
 
-func (r *Repo) getFilesModifiedByPr(pr_number int) map[string]int {
-	rows, err := r.db.Query("SELECT `ext`, `count` FROM pr_files_modified_by_ext WHERE pr_number = ?", pr_number)
+func (r *Repo) getFilesModifiedByPr(pr_number int, repo string) map[string]int {
+	rows, err := r.db.Query("SELECT `ext`, `count` FROM pr_files_modified_by_ext WHERE pr_number = ? AND repo = ?", pr_number, repo)
 	if err != nil {
 		return nil
 	}

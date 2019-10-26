@@ -1,8 +1,10 @@
 package main
 
 import (
+	"database/sql"
 	"github.com/google/go-github/github"
-	"github.com/krlvi/github-devstats/sql"
+	access "github.com/krlvi/github-devstats/sql"
+	"github.com/krlvi/github-devstats/sql/user"
 	"log"
 	"os"
 	"strconv"
@@ -45,11 +47,12 @@ func main() {
 
 func processIntoDB(c *client.GH, prIssues []github.Issue) error {
 	log.Println("creating a db connection")
-	db, err := sql.New()
+	db, err := access.New()
 	if err != nil {
 		return err
 	}
-	events, err := sql.NewEventAccess(db)
+	loadUsers(db, err, c)
+	events, err := access.NewEventAccess(db)
 	if err != nil {
 		return err
 	}
@@ -62,11 +65,22 @@ func processIntoDB(c *client.GH, prIssues []github.Issue) error {
 	}
 	ch := make(chan event.Event, 10)
 	var wg sync.WaitGroup
-	go sql.ReadAndPersist(events, ch, &wg)
+	go access.ReadAndPersist(events, ch, &wg)
 	event.DumpEvents(c, prIssues, ch, &wg)
 	wg.Wait()
 	close(ch)
 	return nil
+}
+
+func loadUsers(db *sql.DB, err error, c *client.GH) {
+	users := user.NewRepo(db)
+	orgUsers, err := c.GetOrgUsers()
+	for _, u := range orgUsers {
+		err := users.SaveUser(u.GetLogin(), u.GetName())
+		if err != nil {
+			log.Println(err)
+		}
+	}
 }
 
 func printUsageAndExit() {

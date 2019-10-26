@@ -22,4 +22,4 @@ services:
       - "/tmp/grafana-storage:/var/lib/grafana"
     ports:
       - 3000:3000
-    user: "104"
+    user: "472"

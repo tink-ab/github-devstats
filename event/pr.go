@@ -69,7 +69,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string, users *user.Rep
 		CommentsCount:            p.GetComments(),
 		AuthorId:                 p.GetUser().GetLogin(),
 		AuthorName:               users.GetName(p.GetUser().GetLogin()),
-		AuthorTeams:              c.GetUserTeams(p.GetUser().GetLogin()),
+		AuthorTeams:              users.GetTeamsByUserId(p.GetUser().GetLogin()),
 		CommitsByType:            map[string]int{},
 		FilesAddedByExtension:    map[string]int{},
 		FilesModifiedByExtension: map[string]int{},
@@ -124,8 +124,8 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string, users *user.Rep
 				e.TimeToApproveSeconds = r.GetSubmittedAt().Sub(p.GetCreatedAt()).Seconds()
 				e.ApproverId = r.GetUser().GetLogin()
 				e.ApproverName = users.GetName(r.GetUser().GetLogin())
-				e.ApproverTeams = c.GetUserTeams(r.GetUser().GetLogin())
-				e.CrossTeam = crossTeam(c.GetUserTeams(p.GetUser().GetLogin()), c.GetUserTeams(r.GetUser().GetLogin()))
+				e.ApproverTeams = users.GetTeamsByUserId(r.GetUser().GetLogin())
+				e.CrossTeam = crossTeam(users.GetTeamsByUserId(p.GetUser().GetLogin()), users.GetTeamsByUserId(r.GetUser().GetLogin()))
 			}
 			if r.GetState() == "DISMISSED" {
 				e.DismissReviewCount++

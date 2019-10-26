@@ -28,6 +28,11 @@ func main() {
 		daysAgo, _ = strconv.Atoi(os.Args[3])
 	}
 
+	refresh := false
+	if len(os.Args) > 4 && os.Args[4] == "refresh" {
+		refresh = true
+	}
+
 	log.Println("fetching github teams and their members for", org)
 	c := client.NewClient(org, accessToken)
 
@@ -38,21 +43,23 @@ func main() {
 		log.Panicln("could not fetch pull requests:", err)
 	}
 
-	err = processIntoDB(c, prIssues)
+	err = processIntoDB(c, prIssues, refresh)
 	if err != nil {
 		log.Println(err)
 	}
 }
 
-func processIntoDB(c *client.GH, prIssues []github.Issue) error {
+func processIntoDB(c *client.GH, prIssues []github.Issue, refresh bool) error {
 	log.Println("creating a db connection")
 	db, err := access.New()
 	if err != nil {
 		return err
 	}
 	users := user.NewRepo(db)
-	loadUsers(users, c)
-	loadTeams(users, c)
+	if refresh {
+		loadUsers(users, c)
+		loadTeams(users, c)
+	}
 	events, err := access.NewEventAccess(db)
 	if err != nil {
 		return err

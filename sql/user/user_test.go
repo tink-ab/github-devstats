@@ -12,7 +12,7 @@ func TestRepository_Save(t *testing.T) {
 	assert.NoError(t, err)
 	err = r.SaveUser("foo", "Foo Barsson")
 	assert.NoError(t, err)
-	assert.Equal(t, "Foo Barsson", r.getName("foo"))
+	assert.Equal(t, "Foo Barsson", r.GetName("foo"))
 }
 
 func TestRepo_SaveUserTeam(t *testing.T) {

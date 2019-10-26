@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"github.com/google/go-github/github"
 	access "github.com/krlvi/github-devstats/sql"
 	"github.com/krlvi/github-devstats/sql/user"
@@ -51,13 +50,14 @@ func processIntoDB(c *client.GH, prIssues []github.Issue) error {
 	if err != nil {
 		return err
 	}
-	loadUsers(db, err, c)
+	users := user.NewRepo(db)
+	loadUsers(users, err, c)
 	events, err := access.NewEventAccess(db)
 	if err != nil {
 		return err
 	}
 	for userId, teams := range c.GetTeamsByUser() {
-		userName := c.GetUserName(userId)
+		userName := users.GetName(userId)
 		_ = events.SaveUser(userId, userName)
 		for _, team := range teams {
 			_ = events.SaveUserTeam(userId, team)
@@ -66,14 +66,13 @@ func processIntoDB(c *client.GH, prIssues []github.Issue) error {
 	ch := make(chan event.Event, 10)
 	var wg sync.WaitGroup
 	go access.ReadAndPersist(events, ch, &wg)
-	event.DumpEvents(c, prIssues, ch, &wg)
+	event.DumpEvents(c, prIssues, ch, &wg, users)
 	wg.Wait()
 	close(ch)
 	return nil
 }
 
-func loadUsers(db *sql.DB, err error, c *client.GH) {
-	users := user.NewRepo(db)
+func loadUsers(users *user.Repo, err error, c *client.GH) {
 	orgUsers, err := c.GetOrgUsers()
 	for _, u := range orgUsers {
 		err := users.SaveUser(u.GetLogin(), u.GetName())

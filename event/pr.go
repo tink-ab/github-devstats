@@ -1,8 +1,7 @@
 package event
 
 import (
-	"encoding/json"
-	"fmt"
+	"github.com/krlvi/github-devstats/sql/user"
 	"regexp"
 	"strings"
 	"sync"
@@ -40,7 +39,7 @@ type Event struct {
 	ChangesRequestedCount    int            `json:"changes_requested_count"`
 }
 
-func DumpEvents(c *client.GH, issues []github.Issue, ch chan Event, wg *sync.WaitGroup) {
+func DumpEvents(c *client.GH, issues []github.Issue, ch chan Event, wg *sync.WaitGroup, users *user.Repo) {
 	for _, i := range issues {
 		repo := repoUrlToName(i.GetRepositoryURL())
 		pr, err := c.GetPR(i.GetNumber(), repo)
@@ -48,22 +47,7 @@ func DumpEvents(c *client.GH, issues []github.Issue, ch chan Event, wg *sync.Wai
 			continue
 		}
 		wg.Add(1)
-		ch <- prToEvent(c, pr, repo)
-	}
-}
-
-func ProcessPRIssues(c *client.GH, issues []github.Issue) {
-	for _, i := range issues {
-		repo := repoUrlToName(i.GetRepositoryURL())
-		pr, err := c.GetPR(i.GetNumber(), repo)
-		if err != nil {
-			continue
-		}
-		j, err := json.MarshalIndent(prToEvent(c, pr, repo), "", "  ")
-		if err != nil {
-			continue
-		}
-		fmt.Printf("%s\n", string(j))
+		ch <- prToEvent(c, pr, repo, users)
 	}
 }
 
@@ -72,7 +56,7 @@ func repoUrlToName(url string) string {
 	return tokens[len(tokens)-1]
 }
 
-func prToEvent(c *client.GH, p *github.PullRequest, repo string) Event {
+func prToEvent(c *client.GH, p *github.PullRequest, repo string, users *user.Repo) Event {
 	e := Event{
 		PrNumber:                 p.GetNumber(),
 		Repository:               repo,
@@ -84,7 +68,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string) Event {
 		CommitsCount:             p.GetCommits(),
 		CommentsCount:            p.GetComments(),
 		AuthorId:                 p.GetUser().GetLogin(),
-		AuthorName:               c.GetUserName(p.GetUser().GetLogin()),
+		AuthorName:               users.GetName(p.GetUser().GetLogin()),
 		AuthorTeams:              c.GetUserTeams(p.GetUser().GetLogin()),
 		CommitsByType:            map[string]int{},
 		FilesAddedByExtension:    map[string]int{},
@@ -139,7 +123,7 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string) Event {
 			if r.GetState() == "APPROVED" {
 				e.TimeToApproveSeconds = r.GetSubmittedAt().Sub(p.GetCreatedAt()).Seconds()
 				e.ApproverId = r.GetUser().GetLogin()
-				e.ApproverName = c.GetUserName(r.GetUser().GetLogin())
+				e.ApproverName = users.GetName(r.GetUser().GetLogin())
 				e.ApproverTeams = c.GetUserTeams(r.GetUser().GetLogin())
 				e.CrossTeam = crossTeam(c.GetUserTeams(p.GetUser().GetLogin()), c.GetUserTeams(r.GetUser().GetLogin()))
 			}

@@ -79,24 +79,68 @@ func loadUsers(users *user.Repo, c *client.GH) {
 		log.Println(err)
 	}
 	for _, u := range orgUsers {
-		err := users.SaveUser(u.GetLogin(), u.GetName())
-		if err != nil {
-			log.Println(err)
+		name := users.GetName(u.GetLogin())
+		if len(name) == 0 {
+			_ = users.SaveUser(u.GetLogin(), u.GetName())
+			log.Println("Added user", u.GetLogin(), ":", u.GetName())
 		}
 	}
 }
 
 func loadTeams(users *user.Repo, c *client.GH) {
 	for userId, teams := range c.GetTeamsByUser() {
-		for _, team := range teams {
+		currentTeams := users.GetTeamsByUserId(userId)
+		toAdd := teamsToAdd(currentTeams, teams)
+		for _, team := range toAdd {
 			err := users.SaveUserTeam(userId, team)
 			if err != nil {
 				log.Println(err)
 			}
 		}
+		if len(toAdd) > 0 {
+			log.Println("Added teams for user", userId, ":", toAdd)
+		}
+		toRemove := teamsToRemove(currentTeams, teams)
+		for _, team := range toRemove {
+			err := users.RemoveUserTeam(userId, team)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+		if len(toRemove) > 0 {
+			log.Println("Removed teams for user", userId, ":", toRemove)
+		}
 	}
 }
 
+func teamsToAdd(currentTeams, teams []string) []string {
+	var toAdd []string
+	for _, t := range teams {
+		if !contains(currentTeams, t) {
+			toAdd = append(toAdd, t)
+		}
+	}
+	return toAdd
+}
+
+func teamsToRemove(currentTeams, teams []string) []string {
+	var toRemove []string
+	for _, t := range currentTeams {
+		if !contains(teams, t) {
+			toRemove = append(toRemove, t)
+		}
+	}
+	return toRemove
+}
+
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
 func printUsageAndExit() {
 	log.Println("supply github organization and access token as command parameters")
 	os.Exit(1)

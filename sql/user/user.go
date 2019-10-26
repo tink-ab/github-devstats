@@ -22,7 +22,7 @@ func (r *Repo) SaveUser(id, name string) error {
 	return err
 }
 
-func (r *Repo) getName(id string) (name string) {
+func (r *Repo) GetName(id string) (name string) {
 	row := r.db.QueryRow("SELECT name FROM users WHERE id = ?", id)
 	_ = row.Scan(&name)
 	return

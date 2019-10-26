@@ -156,6 +156,28 @@ func getTeams(c *GH, page int) (teams []*github.Team, nextPage int, err error) {
 	return teams, rsp.NextPage, nil
 }
 
+func (c *GH) GetOrgUsers() ([]*github.User, error) {
+	var members []*github.User
+	page := 1
+	for page != 0 {
+		newMembers, nextPage, err := getOrgUsers(c, page)
+		if err != nil {
+			return nil, err
+		}
+		page = nextPage
+		members = append(members, newMembers...)
+	}
+	return members, nil
+}
+
+func getOrgUsers(c *GH, page int) (members []*github.User, nextPage int, err error) {
+	users, rsp, err := c.client.Organizations.ListMembers(c.ctx, c.org, &github.ListMembersOptions{ListOptions: github.ListOptions{Page: page}})
+	if err != nil {
+		return nil, 0, err
+	}
+	return users, rsp.NextPage, nil
+}
+
 func (c *GH) GetMembers(teamId int64) ([]*github.User, error) {
 	var members []*github.User
 	page := 1

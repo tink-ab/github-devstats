@@ -22,7 +22,7 @@ func TestRepo_SaveUserTeam(t *testing.T) {
 	assert.NoError(t, err)
 	err = r.SaveUserTeam("foo", "team-b")
 	assert.NoError(t, err)
-	assert.ElementsMatch(t, []string{"team-a", "team-b"}, r.getTeamsByUserId("foo"))
+	assert.ElementsMatch(t, []string{"team-a", "team-b"}, r.GetTeamsByUserId("foo"))
 }
 
 func newRepo() (*Repo, error) {

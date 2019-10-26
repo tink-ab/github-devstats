@@ -16,7 +16,6 @@ type GH struct {
 	client *github.Client
 	ctx    context.Context
 	org    string
-	teams  map[string][]string
 }
 
 type rateLimitRetryer struct {
@@ -93,18 +92,10 @@ func NewClient(org, accessToken string) *GH {
 		ctx:    ctx,
 		org:    org,
 	}
-	client.teams = client.GetTeamsByUser()
 	return client
 }
 
-func (c *GH) GetUserTeams(login string) []string {
-	return c.teams[login]
-}
-
 func (c *GH) GetTeamsByUser() map[string][]string {
-	if len(c.teams) > 0 {
-		return c.teams
-	}
 	teams, err := c.GetTeams()
 	if err != nil {
 		return nil

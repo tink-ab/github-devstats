@@ -33,7 +33,7 @@ func (r *Repo) SaveUserTeam(user_id, team_name string) error {
 	return err
 }
 
-func (r *Repo) getTeamsByUserId(user_id string) []string {
+func (r *Repo) GetTeamsByUserId(user_id string) []string {
 	rows, err := r.db.Query("SELECT team_name FROM user_teams WHERE user_id = ?", user_id)
 	if err != nil {
 		return nil

@@ -51,17 +51,11 @@ func processIntoDB(c *client.GH, prIssues []github.Issue) error {
 		return err
 	}
 	users := user.NewRepo(db)
-	loadUsers(users, err, c)
+	loadUsers(users, c)
+	loadTeams(users, c)
 	events, err := access.NewEventAccess(db)
 	if err != nil {
 		return err
-	}
-	for userId, teams := range c.GetTeamsByUser() {
-		userName := users.GetName(userId)
-		_ = events.SaveUser(userId, userName)
-		for _, team := range teams {
-			_ = events.SaveUserTeam(userId, team)
-		}
 	}
 	ch := make(chan event.Event, 10)
 	var wg sync.WaitGroup
@@ -72,12 +66,26 @@ func processIntoDB(c *client.GH, prIssues []github.Issue) error {
 	return nil
 }
 
-func loadUsers(users *user.Repo, err error, c *client.GH) {
+func loadUsers(users *user.Repo, c *client.GH) {
 	orgUsers, err := c.GetOrgUsers()
+	if err != nil {
+		log.Println(err)
+	}
 	for _, u := range orgUsers {
 		err := users.SaveUser(u.GetLogin(), u.GetName())
 		if err != nil {
 			log.Println(err)
+		}
+	}
+}
+
+func loadTeams(users *user.Repo, c *client.GH) {
+	for userId, teams := range c.GetTeamsByUser() {
+		for _, team := range teams {
+			err := users.SaveUserTeam(userId, team)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 }

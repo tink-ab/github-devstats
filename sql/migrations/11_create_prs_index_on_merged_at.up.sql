@@ -1,0 +1,1 @@
+CREATE INDEX merged_at ON prs(merged_at)

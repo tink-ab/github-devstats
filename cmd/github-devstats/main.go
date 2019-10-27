@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/google/go-github/github"
 	access "github.com/krlvi/github-devstats/sql"
-	"github.com/krlvi/github-devstats/sql/schema"
 	"github.com/krlvi/github-devstats/sql/user"
 	"log"
 	"os"
@@ -56,7 +55,6 @@ func processIntoDB(c *client.GH, prIssues []github.Issue, refresh bool) error {
 	if err != nil {
 		return err
 	}
-	_ = schema.MigrateUp(db)
 	users := user.NewRepo(db)
 	if refresh {
 		loadUsers(users, c)

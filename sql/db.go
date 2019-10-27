@@ -15,6 +15,7 @@ func New() (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	_ = schema.MigrateUp(db)
 	return db, nil
 }
 
@@ -34,10 +35,6 @@ type EventAccess struct {
 }
 
 func NewEventAccess(db *sql.DB) (*EventAccess, error) {
-	err := schema.MigrateUp(db)
-	if err != nil && err.Error() != "no change" {
-		return nil, err
-	}
 	return &EventAccess{
 		prs:     pr.NewRepo(db),
 		commits: commit.NewRepo(db),

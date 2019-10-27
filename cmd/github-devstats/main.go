@@ -79,7 +79,7 @@ func loadUsers(users *user.Repo, c *client.GH) {
 		log.Println(err)
 	}
 	for _, u := range orgUsers {
-		if len(users.GetName(u.GetLogin())) == 0 {
+		if !users.UserExists(u.GetLogin()) {
 			fullUser, err := c.GetUser(u.GetLogin())
 			if err != nil {
 				log.Println(err)

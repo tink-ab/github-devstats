@@ -18,6 +18,12 @@ func NewRepo(db *sql.DB) *Repo {
 	return repo
 }
 
+func (r *Repo) PrExists(repo string, prNum int) (exists bool) {
+	row := *r.db.QueryRow("SELECT EXISTS(SELECT repository, pr_number from prs WHERE repository = ? AND pr_number = ?)", repo, prNum)
+	_ = row.Scan(&exists)
+	return exists
+}
+
 func (r *Repo) Save(e event.Event) error {
 	_, err := r.db.Exec("INSERT INTO prs ("+
 		"`pr_number`,"+

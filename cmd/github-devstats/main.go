@@ -3,10 +3,12 @@ package main
 import (
 	"github.com/google/go-github/github"
 	access "github.com/krlvi/github-devstats/sql"
+	"github.com/krlvi/github-devstats/sql/pr"
 	"github.com/krlvi/github-devstats/sql/user"
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -60,6 +62,8 @@ func processIntoDB(c *client.GH, prIssues []github.Issue, refresh bool) error {
 		loadUsers(users, c)
 		loadTeams(users, c)
 	}
+	prs := pr.NewRepo(db)
+	prIssues = filterPrs(prs, prIssues)
 	events, err := access.NewEventAccess(db)
 	if err != nil {
 		return err
@@ -71,6 +75,21 @@ func processIntoDB(c *client.GH, prIssues []github.Issue, refresh bool) error {
 	wg.Wait()
 	close(ch)
 	return nil
+}
+
+func filterPrs(prs *pr.Repo, issues []github.Issue) (out []github.Issue) {
+	for _, i := range issues {
+		repo := repoUrlToName(i.GetRepositoryURL())
+		if !prs.PrExists(repo, i.GetNumber()) {
+			out = append(out, i)
+		}
+	}
+	return out
+}
+
+func repoUrlToName(url string) string {
+	tokens := strings.Split(url, "/")
+	return tokens[len(tokens)-1]
 }
 
 func loadUsers(users *user.Repo, c *client.GH) {

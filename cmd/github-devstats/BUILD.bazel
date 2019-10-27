@@ -9,6 +9,7 @@ go_library(
         "//client:go_default_library",
         "//event:go_default_library",
         "//sql:go_default_library",
+        "//sql/schema:go_default_library",
         "//sql/user:go_default_library",
         "@com_github_google_go_github//github:go_default_library",
     ],

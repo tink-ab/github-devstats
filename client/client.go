@@ -167,6 +167,11 @@ func getOrgUsers(c *GH, page int) (members []*github.User, nextPage int, err err
 	return users, rsp.NextPage, nil
 }
 
+func (c *GH) GetUser(userLogin string) (*github.User, error) {
+	user, _, err := c.client.Users.Get(c.ctx, userLogin)
+	return user, err
+}
+
 func (c *GH) GetMembers(teamId int64) ([]*github.User, error) {
 	var members []*github.User
 	page := 1

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/google/go-github/github"
 	access "github.com/krlvi/github-devstats/sql"
+	"github.com/krlvi/github-devstats/sql/schema"
 	"github.com/krlvi/github-devstats/sql/user"
 	"log"
 	"os"
@@ -55,6 +56,7 @@ func processIntoDB(c *client.GH, prIssues []github.Issue, refresh bool) error {
 	if err != nil {
 		return err
 	}
+	_ = schema.MigrateUp(db)
 	users := user.NewRepo(db)
 	if refresh {
 		loadUsers(users, c)
@@ -79,10 +81,14 @@ func loadUsers(users *user.Repo, c *client.GH) {
 		log.Println(err)
 	}
 	for _, u := range orgUsers {
-		name := users.GetName(u.GetLogin())
-		if len(name) == 0 {
-			_ = users.SaveUser(u.GetLogin(), u.GetName())
-			log.Println("Added user", u.GetLogin(), ":", u.GetName())
+		if len(users.GetName(u.GetLogin())) == 0 {
+			fullUser, err := c.GetUser(u.GetLogin())
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			_ = users.SaveUser(fullUser.GetLogin(), fullUser.GetName())
+			log.Println("Added user", fullUser.GetLogin(), ":", fullUser.GetName())
 		}
 	}
 }

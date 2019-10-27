@@ -10,6 +10,5 @@ go_library(
         "//sql/commit:go_default_library",
         "//sql/pr:go_default_library",
         "//sql/schema:go_default_library",
-        "//sql/user:go_default_library",
     ],
 )

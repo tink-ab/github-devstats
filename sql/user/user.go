@@ -28,6 +28,12 @@ func (r *Repo) GetName(id string) (name string) {
 	return
 }
 
+func (r *Repo) UserExists(id string) (exists bool) {
+	row := *r.db.QueryRow("SELECT EXISTS(SELECT id from users WHERE id = ?)", id)
+	_ = row.Scan(&exists)
+	return exists
+}
+
 func (r *Repo) SaveUserTeam(user_id, team_name string) error {
 	_, err := r.db.Exec("INSERT INTO user_teams (`user_id`, `team_name`) VALUES (?, ?)", user_id, team_name)
 	return err

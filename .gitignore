@@ -23,3 +23,4 @@ bazel-*
 *.swp
 
 .mysql-data
+.grafana-storage

@@ -30,6 +30,8 @@ type Event struct {
 	FilesModifiedByExtension map[string]int `json:"files_modified_by_extension"`
 	JavaTestFilesModified    int            `json:"java_test_files_modified"`
 	JavaTestsAdded           int            `json:"java_tests_added"`
+	GoTestFilesModified      int            `json:"go_test_files_modified"`
+	GoTestsAdded             int            `json:"go_tests_added"`
 	TimeToApproveSeconds     float64        `json:"time_to_approve_seconds"`
 	ApproverId               string         `json:"approver_id"`
 	ApproverName             string         `json:"approver_name"`
@@ -75,6 +77,8 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string, users *user.Rep
 		FilesModifiedByExtension: map[string]int{},
 		JavaTestFilesModified:    0,
 		JavaTestsAdded:           0,
+		GoTestFilesModified:       0,
+		GoTestsAdded:             0,
 		TimeToApproveSeconds:     0,
 		ApproverId:               "",
 		ApproverName:             "",
@@ -107,12 +111,18 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string, users *user.Rep
 				if strings.HasSuffix(f.GetFilename(), "Test.java") {
 					e.JavaTestFilesModified++
 				}
+				if strings.HasSuffix(f.GetFilename(), "test.go") {
+					e.GoTestFilesModified++
+				}
 			}
 			if f.GetStatus() == "added" {
 				e.FilesAddedByExtension[fileExt]++
 			}
 			if strings.HasSuffix(f.GetFilename(), "Test.java") {
 				e.JavaTestsAdded = javaTestsAddedInPatch(f.GetPatch())
+			}
+			if strings.HasSuffix(f.GetFilename(), "test.go") {
+				e.GoTestsAdded = goTestsAddedInPatch(f.GetPatch())
 			}
 		}
 	}

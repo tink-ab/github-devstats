@@ -39,12 +39,14 @@ func (r *Repo) Save(e event.Event) error {
 		"`author_id`,"+
 		"`java_test_files_modified`,"+
 		"`java_tests_added`,"+
+		"`go_test_files_modified`,"+
+		"`go_tests_added`,"+
 		"`time_to_approve_seconds`,"+
 		"`approver_id`,"+
 		"`cross_team`,"+
 		"`dismiss_review_count`,"+
 		"`changes_requested_count`"+
-		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		e.PrNumber,
 		e.Repository,
 		e.MergedAt,
@@ -58,6 +60,8 @@ func (r *Repo) Save(e event.Event) error {
 		e.AuthorId,
 		e.JavaTestFilesModified,
 		e.JavaTestsAdded,
+		e.GoTestFilesModified,
+		e.GoTestsAdded,
 		e.TimeToApproveSeconds,
 		e.ApproverId,
 		e.CrossTeam,
@@ -82,6 +86,8 @@ func (r *Repo) get(repository string, pr_number int) event.Event {
 		"`author_id`,"+
 		"`java_test_files_modified`,"+
 		"`java_tests_added`,"+
+		"`go_test_files_modified`,"+
+		"`go_tests_added`,"+
 		"`time_to_approve_seconds`,"+
 		"`approver_id`,"+
 		"`cross_team`,"+
@@ -104,6 +110,8 @@ func (r *Repo) get(repository string, pr_number int) event.Event {
 		&e.AuthorId,
 		&e.JavaTestFilesModified,
 		&e.JavaTestsAdded,
+		&e.GoTestFilesModified,
+		&e.GoTestsAdded,
 		&e.TimeToApproveSeconds,
 		&e.ApproverId,
 		&e.CrossTeam,

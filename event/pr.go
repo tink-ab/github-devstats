@@ -139,14 +139,24 @@ func prToEvent(c *client.GH, p *github.PullRequest, repo string, users *user.Rep
 }
 
 func javaTestsAddedInPatch(patch string) int {
-	javaTestAdded := regexp.MustCompile(`^\+\s*@Test`)
-	javaTestRemoved := regexp.MustCompile(`^-\s*@Test`)
+	testAdded := regexp.MustCompile(`^\+\s*@Test`)
+	testRemoved := regexp.MustCompile(`^-\s*@Test`)
+	return testsAddedInPatch(patch, testAdded, testRemoved)
+}
+
+func goTestsAddedInPatch(patch string) int {
+	testAdded := regexp.MustCompile(`^\+\s*func\s*Test.*\*testing\.T\)\s*\{`)
+	testRemoved := regexp.MustCompile(`^\-\s*func\s*Test.*\*testing\.T\)\s*\{`)
+	return testsAddedInPatch(patch, testAdded, testRemoved)
+}
+
+func testsAddedInPatch(patch string, testAdded, testRemoved *regexp.Regexp) int {
 	added := 0
 	removed := 0
 	for _, line := range strings.Split(patch, "\n") {
-		if javaTestAdded.MatchString(line) {
+		if testAdded.MatchString(line) {
 			added++
-		} else if javaTestRemoved.MatchString(line) {
+		} else if testRemoved.MatchString(line) {
 			removed++
 		}
 	}
